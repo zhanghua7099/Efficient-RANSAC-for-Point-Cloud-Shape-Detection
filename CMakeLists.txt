@@ -2,13 +2,18 @@
 cmake_minimum_required(VERSION 2.8)
 project(pc_ransac)
 
-set(CMAKE_CXX_FLAGS "-fpermissive")
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_BUILD_TYPE Release)
 
 include_directories(./)
 include_directories(./MiscLib/)
-FILE(GLOB SRC "./*.cpp")
-FILE(GLOB MISC_SRC "./MiscLib/*.cpp")
+file(GLOB_RECURSE cpp_file "src/*.cpp")
+file(GLOB_RECURSE MISC_SRC "MiscLib/*.cpp")
 
-add_library(libransac STATIC  ${SRC} ${MISC_SRC})
+include_directories(
+    ${PROJECT_SOURCE_DIR}/include/
+)
+
+add_library(libransac STATIC  ${cpp_file} ${MISC_SRC})
 add_executable(main main.cpp)
 target_link_libraries(main libransac)

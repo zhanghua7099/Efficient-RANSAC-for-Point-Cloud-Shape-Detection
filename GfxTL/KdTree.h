@@ -59,6 +59,16 @@ namespace GfxTL
 				m_children[i] = cell;
 			}
 
+			ThisType *Child(unsigned int i)
+			{
+				return m_children[i];
+			}
+
+			const ThisType *Child(unsigned int i) const
+			{
+				return m_children[i];
+			}
+
 			unsigned int &SplitAxis()
 			{
 				return m_splitAxis;

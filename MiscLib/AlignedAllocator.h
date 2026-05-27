@@ -2,6 +2,8 @@
 #define MiscLib__ALIGNEDALLOCATOR_HEADER__
 
 #include <memory>
+#include <new>
+#include <cstdlib>
 #if defined(__APPLE__) || (defined(_WIN32) && defined(__MINGW32__))
 #include <stdlib.h>
 #else
@@ -34,7 +36,23 @@
 // #define a_malloc(sz, align) _aligned_malloc((align), (sz)) // Liangliang: seems the order of the argument is wrong? But it still crashes after switched.
 #define a_malloc(sz, align) malloc(sz)                        // Liangliang: the normal malloc works.
 #else
-#define a_malloc(sz, align) aligned_alloc((align), (sz))
+static inline void *misc_aligned_malloc(size_t size, size_t alignment)
+{
+	if(alignment < sizeof(void *))
+		alignment = sizeof(void *);
+	if(alignment & (alignment - 1))
+	{
+		size_t roundedAlignment = sizeof(void *);
+		while(roundedAlignment < alignment)
+			roundedAlignment <<= 1;
+		alignment = roundedAlignment;
+	}
+	void *ptr = NULL;
+	if(posix_memalign(&ptr, alignment, size ? size : 1) != 0)
+		return NULL;
+	return ptr;
+}
+#define a_malloc(sz, align) misc_aligned_malloc((sz), (align))
 #endif
 #endif // !a_malloc
 
@@ -69,7 +87,12 @@ public:
 	pointer address(reference x) const { return &x; }
 	const_pointer address(const_reference x) const { return &x; }
 	pointer allocate(size_type s, std::allocator< void >::const_pointer hint = 0)
-	{ return (T *)a_malloc(s * sizeof(T), Align); }
+	{
+		pointer ptr = (T *)a_malloc(s * sizeof(T), Align);
+		if(!ptr)
+			throw std::bad_alloc();
+		return ptr;
+	}
 	void deallocate(pointer p, size_type) { a_free(p); }
 	size_type max_size() const throw() { return std::numeric_limits< size_type >::max(); }
 	void construct(pointer p, const T& val) { new(static_cast< void * >(p)) T(val); }

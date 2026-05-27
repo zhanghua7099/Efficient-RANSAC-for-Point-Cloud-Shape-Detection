@@ -17,10 +17,16 @@
 extern MiscLib::performance_t totalTime_cylinderConnected;
 
 CylinderPrimitiveShape::CylinderPrimitiveShape()
+: m_clip(false)
+, m_minPhi(0)
+, m_maxPhi(0)
 {}
 
 CylinderPrimitiveShape::CylinderPrimitiveShape(const Cylinder &cylinder)
 : m_cylinder(cylinder)
+, m_clip(false)
+, m_minPhi(0)
+, m_maxPhi(0)
 {}
 
 size_t CylinderPrimitiveShape::Identifier() const

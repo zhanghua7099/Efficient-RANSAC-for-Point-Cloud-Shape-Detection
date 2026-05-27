@@ -547,6 +547,7 @@ RansacShapeDetector::Detect(PointCloud &pc, size_t beginIdx, size_t endIdx,
 	size_t currentSize = pcSize;
 	do
 	{
+		float numLevels = static_cast<float>(globalOctTreeMaxNodeDepth + 1);
 		MiscLib::Vector< std::pair< float, size_t > > sampleLevelScores(
 			sampleLevelProbability.size());
 		for(size_t i = 0; i < sampleLevelScores.size(); ++i)
@@ -575,10 +576,10 @@ RansacShapeDetector::Detect(PointCloud &pc, size_t beginIdx, size_t endIdx,
 		}
 		while(CandidateFailureProbability(bestExpectedValue,
 				currentSize - numInvalid, drawnCandidates,
-				globalOctTreeMaxNodeDepth) > m_options.m_probability
+				numLevels) > m_options.m_probability
 			&& CandidateFailureProbability(m_options.m_minSupport,
 				currentSize - numInvalid, drawnCandidates,
-				globalOctTreeMaxNodeDepth) > m_options.m_probability);
+				numLevels) > m_options.m_probability);
 		// find the best candidate:
 		float bestCandidateFailureProbability;
 		float failureProbability = std::numeric_limits< float >::infinity();
@@ -587,7 +588,7 @@ RansacShapeDetector::Detect(PointCloud &pc, size_t beginIdx, size_t endIdx,
 		while(FindBestCandidate(candidates, octrees, pc, subsetScoreVisitor,
 			currentSize, drawnCandidates, numInvalid,
 			std::max((size_t)m_options.m_minSupport, (size_t)(0.8f * firstCandidateSize)),
-			globalOctTreeMaxNodeDepth, &maxForgottenCandidate,
+			numLevels, &maxForgottenCandidate,
 			&bestCandidateFailureProbability))
 		{
 			if(!foundCandidate)
@@ -661,6 +662,11 @@ RansacShapeDetector::Detect(PointCloud &pc, size_t beginIdx, size_t endIdx,
 			}
 			if(candidates.back().Size() == 0)
 				std::cout << "ERROR: candidate size == 0 after fitting" << std::endl;
+			if(candidates.back().Indices()->size() < m_options.m_minSupport)
+			{
+				candidates.pop_back();
+				continue;
+			}
 			// best candidate is ok!
 			// remove the points
 			shapes->push_back(std::make_pair(RefCountPtr< PrimitiveShape >(candidates.back().Shape()),
@@ -804,6 +810,20 @@ RansacShapeDetector::Detect(PointCloud &pc, size_t beginIdx, size_t endIdx,
 				if(globalOctree.Root()->Size() != globalOctreeIndices.size())
 					std::cout << "ERROR IN GLOBAL REBUILD!" << std::endl;
 				sampleLevelProbability.resize(globalOctTreeMaxNodeDepth + 1);
+				double probabilitySum = 0.0;
+				for(size_t i = 0; i < sampleLevelProbability.size(); ++i)
+					probabilitySum += sampleLevelProbability[i];
+				if(probabilitySum > 0.0)
+				{
+					for(size_t i = 0; i < sampleLevelProbability.size(); ++i)
+						sampleLevelProbability[i] /= probabilitySum;
+				}
+				else
+				{
+					double uniformProbability = 1.0 / sampleLevelProbability.size();
+					for(size_t i = 0; i < sampleLevelProbability.size(); ++i)
+						sampleLevelProbability[i] = uniformProbability;
+				}
 
 				//shapeIndex.resize(globalOctreeIndices.size());
 				std::fill(shapeIndex.begin() + beginIdx,
@@ -854,7 +874,7 @@ RansacShapeDetector::Detect(PointCloud &pc, size_t beginIdx, size_t endIdx,
 		}
 	}
 	while(CandidateFailureProbability(m_options.m_minSupport, currentSize - numInvalid,
-		drawnCandidates, globalOctTreeMaxNodeDepth) > m_options.m_probability
+		drawnCandidates, static_cast<float>(globalOctTreeMaxNodeDepth + 1)) > m_options.m_probability
 		&& (currentSize - numInvalid) >= m_options.m_minSupport);
 
 	if(numInvalid)

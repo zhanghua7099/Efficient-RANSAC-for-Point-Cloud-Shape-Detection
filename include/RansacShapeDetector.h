@@ -10,6 +10,8 @@
 #include "Octree.h"
 #include <GfxTL/NullClass.h>
 #include <GfxTL/ImmediateTreeDataKernels.h>
+#include <algorithm>
+#include <cmath>
 
 #ifndef DLL_LINKAGE
 #define DLL_LINKAGE
@@ -61,8 +63,21 @@ class DLL_LINKAGE RansacShapeDetector
 		float CandidateFailureProbability(float candidateSize,
 			float numberOfPoints, float drawnCandidates, float levels) const
 		{
-			return std::min(std::pow(1.f - candidateSize
-				/ (numberOfPoints * levels * (1 << (m_reqSamples - 1))),
+			if(candidateSize <= 0.f || numberOfPoints <= 0.f
+				|| drawnCandidates <= 0.f || m_reqSamples == 0)
+				return 1.f;
+			if(levels < 1.f)
+				levels = 1.f;
+			float sampleSpace = numberOfPoints * levels
+				* std::pow(2.f, static_cast<float>(m_reqSamples - 1));
+			if(sampleSpace <= 0.f)
+				return 1.f;
+			float hitProbability = candidateSize / sampleSpace;
+			if(hitProbability >= 1.f)
+				return 0.f;
+			if(hitProbability <= 0.f)
+				return 1.f;
+			return std::min(std::pow(1.f - hitProbability,
 				drawnCandidates), 1.f);
 		}
 		float UpdateAcceptedFailureProbability(

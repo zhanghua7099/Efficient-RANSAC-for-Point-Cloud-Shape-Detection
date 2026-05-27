@@ -25,7 +25,7 @@ public:
 		float normalThresh, MiscLib::Vector< size_t >::const_iterator begin,
 		MiscLib::Vector< size_t >::const_iterator end,
 		std::pair< size_t, float > *score,
-		MiscLib::Vector< size_t > *indices = NULL)
+		MiscLib::Vector< size_t > *indices = nullptr)
 	{
 		Vec3f n;
 		size_t size = end - begin;

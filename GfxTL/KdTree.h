@@ -34,12 +34,12 @@ namespace GfxTL
 
 			KdTreeCell()
 			{
-				m_children[0] = m_children[1] = NULL;
+				std::fill_n(m_children, NChildren, nullptr);
 			}
 
 			~KdTreeCell()
 			{
-				if(m_children[0] != (KdTreeCell *)0x1)
+				if(m_children[0] != reinterpret_cast< KdTreeCell * >(1))
 					delete m_children[0];
 				delete m_children[1];
 			}

@@ -15,7 +15,7 @@ namespace GfxTL
 		typedef typename DataKernelT::HandleType HandleType;
 		typedef typename DataKernelT::DereferencedType DereferencedType;
 
-		ShuffleIndicesTreeDataKernelStrategy() : m_shuffleIndices(NULL) {}
+		ShuffleIndicesTreeDataKernelStrategy() : m_shuffleIndices(nullptr) {}
 		void ShuffleIndices(ShuffleIndicesT *shuffleIndices)
 		{ m_shuffleIndices = shuffleIndices; }
 		ShuffleIndicesT *ShuffleIndices() const { return m_shuffleIndices; }

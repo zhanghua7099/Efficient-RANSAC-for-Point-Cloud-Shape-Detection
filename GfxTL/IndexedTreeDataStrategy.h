@@ -94,7 +94,7 @@ namespace GfxTL
 					typedef typename PointType::ScalarType ScalarType;
 
 					IndexedTreeDataCore()
-					: _data(NULL)
+					: _data(nullptr)
 					{}
 
 					Data &ContainedData()

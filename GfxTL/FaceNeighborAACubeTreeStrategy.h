@@ -25,7 +25,7 @@ struct FaceNeighborAACubeTreeStrategy
 
 		// returns the face neighbor along axis in direction (0 = left, 1 = right)
 		// returns in level the level of the neighbor relative to the input cell (upwards)
-		// returns NULL if the cell is on the boundary
+			// returns nullptr if the cell is on the boundary
 		// This function does not return all face neighbors in the given direction
 		// in the case that the neighbors live on a deeper level than the input cell.
 		// In such a case the face neighbor on the same level as the input cell is
@@ -34,7 +34,7 @@ struct FaceNeighborAACubeTreeStrategy
 			unsigned int axis, unsigned int dir, size_t *level) const
 		{
 			const CellType *parent = BaseType::CellParent(cell);
-			if(!parent) return NULL; // root cell does not have any face neighbors
+				if(!parent) return nullptr; // root cell does not have any face neighbors
 			unsigned int childRelation = CellChildRelation(cell, *parent);
 			// check if face neighbor is another child of parent
 			// this is the case if dir is opposite to the childRelation
@@ -53,7 +53,7 @@ struct FaceNeighborAACubeTreeStrategy
 			// otherwise the face neighbor is a neighbor of the parent
 			size_t l;
 			const CellType *n = CellFaceNeighbor(*parent, axis, dir, &l);
-			if(!n) return NULL;
+				if(!n) return nullptr;
 			if(l > 0) // if the face neighbor of the parent does not live on the same level as the parent
 				// we are unable to find any deeper face neighbor
 			{

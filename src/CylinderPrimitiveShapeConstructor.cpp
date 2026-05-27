@@ -21,7 +21,7 @@ PrimitiveShape *CylinderPrimitiveShapeConstructor::Construct(
 	MiscLib::Vector< Vec3f > samples(points);
 	std::copy(normals.begin(), normals.end(), std::back_inserter(samples));
 	if(!cy.Init(samples))
-		return NULL;
+		return nullptr;
 	return std::make_unique< CylinderPrimitiveShape >(cy).release();
 }
 
@@ -30,7 +30,7 @@ PrimitiveShape *CylinderPrimitiveShapeConstructor::Construct(
 {
 	Cylinder cy;
 	if(!cy.Init(samples))
-		return NULL;
+		return nullptr;
 	return std::make_unique< CylinderPrimitiveShape >(cy).release();
 }
 

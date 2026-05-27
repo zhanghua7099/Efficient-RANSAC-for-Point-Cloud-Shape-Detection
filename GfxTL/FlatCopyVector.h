@@ -55,9 +55,9 @@ namespace GfxTL
 
 			FlatCopyVector()
 			{
-				m_begin = NULL;
-				m_end = NULL;
-				m_capacity = NULL;
+				m_begin = nullptr;
+				m_end = nullptr;
+				m_capacity = nullptr;
 			}
 
 			FlatCopyVector(size_t s)
@@ -72,9 +72,9 @@ namespace GfxTL
 				size_t s = v.size();
 				if(!s)
 				{
-					m_begin = NULL;
-					m_end = NULL;
-					m_capacity = NULL;
+					m_begin = nullptr;
+					m_end = nullptr;
+					m_capacity = nullptr;
 					return;
 				}
 				m_begin = (T *)a_malloc(s * sizeof(T), 16); //new T[s];

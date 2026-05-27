@@ -32,9 +32,9 @@ namespace MiscLib
 
 		NoShrinkVector()
 		{
-			m_begin = NULL;
-			m_end = NULL;
-			m_capacity = NULL;
+			m_begin = nullptr;
+			m_end = nullptr;
+			m_capacity = nullptr;
 		}
 
 		NoShrinkVector(size_type s)
@@ -61,9 +61,9 @@ namespace MiscLib
 			size_type s = v.size();
 			if(!s)
 			{
-				m_begin = NULL;
-				m_end = NULL;
-				m_capacity = NULL;
+				m_begin = nullptr;
+				m_end = nullptr;
+				m_capacity = nullptr;
 				return;
 			}
 			m_begin = AllocatorT::allocate(s);
@@ -79,9 +79,9 @@ namespace MiscLib
 			size_type s = v.size();
 			if(!s)
 			{
-				m_begin = NULL;
-				m_end = NULL;
-				m_capacity = NULL;
+				m_begin = nullptr;
+				m_end = nullptr;
+				m_capacity = nullptr;
 				return;
 			}
 			m_begin = AllocatorT::allocate(s);
@@ -163,7 +163,7 @@ namespace MiscLib
 					AllocatorT::destroy(m_begin + i);
 				AllocatorT::deallocate(m_begin, capacity());
 			}
-			m_end = m_begin = m_capacity = NULL;
+			m_end = m_begin = m_capacity = nullptr;
 		}
 
 		void reserve(size_type s)

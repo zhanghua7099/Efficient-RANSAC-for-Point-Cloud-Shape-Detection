@@ -26,9 +26,9 @@ PrimitiveShape *SpherePrimitiveShapeConstructor::Construct(
 {
 	Sphere sphere;
 	if(!sphere.Init2(points[0], points[1], normals[0], normals[1]))//points[2], points[3]))
-		return NULL;
+		return nullptr;
 	if(sphere.Radius() > m_maxSphereRadius)
-		return NULL;
+		return nullptr;
 	return std::make_unique< SpherePrimitiveShape >(sphere).release();
 }
 
@@ -37,7 +37,7 @@ PrimitiveShape *SpherePrimitiveShapeConstructor::Construct(
 {
 	Sphere sphere;
 	if(!sphere.Init(samples))
-		return NULL;
+		return nullptr;
 	return std::make_unique< SpherePrimitiveShape >(sphere).release();
 }
 

@@ -41,7 +41,7 @@ struct RebuildAACubeTreeStrategy
 						CellType *child = BaseType::Root()->Child(i);
 						delete child;
 					}
-					BaseType::Root()->Child(i, NULL);
+					BaseType::Root()->Child(i, nullptr);
 				}
 			}
 			if(this->IsLeaf(*BaseType::Root()))
@@ -153,7 +153,7 @@ struct RebuildAACubeTreeStrategy
 				cell.Range() = typename BaseType::CellRange(start, *cur);
 				if(numChilds == 0)
 				{
-					cell.Child(0, NULL);
+					cell.Child(0, nullptr);
 					maxDepth = cell.Level();
 				}
 				else if(cell.Size() < BaseType::MaxBucketSize())
@@ -165,9 +165,9 @@ struct RebuildAACubeTreeStrategy
 							continue;
 						CellType *child = cell.Child(i);
 						delete child;
-						cell.Child(i, NULL);
+						cell.Child(i, nullptr);
 					}
-					cell.Child(0, NULL);
+					cell.Child(0, nullptr);
 					maxDepth = cell.Level();
 				}
 				return maxDepth;

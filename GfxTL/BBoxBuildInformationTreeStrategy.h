@@ -33,7 +33,7 @@ namespace GfxTL
 				public:
 					BuildInformation()
 					{
-						m_bbox[0] = m_bbox[1] = NULL;
+						m_bbox[0] = m_bbox[1] = nullptr;
 					}
 
 					void ResizeBBox(unsigned int dim)

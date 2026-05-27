@@ -170,9 +170,9 @@ namespace GfxTL
 						++childCount;
 					}
 					else
-						cells[i] = NULL;
+						cells[i] = nullptr;
 				if(!cells[0] && childCount)
-					cells[0] = (CellType *)0x1;
+					cells[0] = reinterpret_cast< CellType * >(1);
 			}
 
 			template< class SplitterT >

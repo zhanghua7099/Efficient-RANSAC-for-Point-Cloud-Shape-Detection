@@ -18,7 +18,7 @@ class ArrayGridKernel
 {
 public:
 	ArrayGridKernel()
-	: m_array(NULL)
+	: m_array(nullptr)
 	{}
 
 	ArrayGridKernel(ArrayGridKernel< CellT, DimT - 1 > *array)
@@ -295,7 +295,7 @@ public:
 			m_hash.find(m_hashKey);
 		if(i != m_hash.end())
 			return &i->second;
-		return NULL;
+		return nullptr;
 	}
 
 private:
@@ -362,7 +362,7 @@ public:
 		iterator i = m_hash.find(HashKey(index));
 		if(i != m_hash.end())
 			return &i->second;
-		return NULL;
+		return nullptr;
 	}
 
 	template< class IndexT >
@@ -371,7 +371,7 @@ public:
 		const_iterator i = m_hash.find(HashKey(index));
 		if(i != m_hash.end())
 			return &i->second;
-		return NULL;
+		return nullptr;
 	}
 
 	iterator begin() { return m_hash.begin(); }

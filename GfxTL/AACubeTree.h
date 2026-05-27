@@ -23,7 +23,7 @@ namespace GfxTL
 		AACubeTreeCell()
 		{
 			for(size_t i = 0; i < 1 << DimT; ++i)
-				m_children[i] = NULL;
+				m_children[i] = nullptr;
 		}
 
 		~AACubeTreeCell()
@@ -387,7 +387,7 @@ namespace GfxTL
 			{
 				range->first = 0;
 				range->second = 0;
-				return NULL;
+					return nullptr;
 			}
 			typedef typename BaseType::template CellLevelTraversalInformation
 				<

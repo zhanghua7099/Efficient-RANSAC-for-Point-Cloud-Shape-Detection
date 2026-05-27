@@ -47,9 +47,9 @@ static inline void *misc_aligned_malloc(size_t size, size_t alignment)
 			roundedAlignment <<= 1;
 		alignment = roundedAlignment;
 	}
-	void *ptr = NULL;
+	void *ptr = nullptr;
 	if(posix_memalign(&ptr, alignment, size ? size : 1) != 0)
-		return NULL;
+		return nullptr;
 	return ptr;
 }
 #define a_malloc(sz, align) misc_aligned_malloc((sz), (align))

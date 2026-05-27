@@ -31,7 +31,7 @@ PrimitiveShape *TorusPrimitiveShapeConstructor::Construct(
 {
 	Torus torus;
 	if(!torus.Init(samples))
-		return NULL;
+		return nullptr;
 	return std::make_unique< TorusPrimitiveShape >(torus).release();
 }
 

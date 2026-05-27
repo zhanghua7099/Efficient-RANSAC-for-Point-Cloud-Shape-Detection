@@ -6,7 +6,7 @@ namespace GfxTL
 	template< class ValueT, class BaseT >
 	KdTreeCell< ValueT, BaseT >::KdTreeCell()
 	{
-		memset(&_children, NULL, sizeof(_children));
+			std::fill_n(_children, NChildren, nullptr);
 	}
 
 	template< class ValueT, class BaseT >
@@ -19,11 +19,11 @@ namespace GfxTL
 		if(cell._children[0])
 			_children[0] = new KdTreeCell< ValueT, BaseT >(*cell._children[0]);
 		else
-			_children[0] = NULL;
+			_children[0] = nullptr;
 		if(cell._children[1])
 			_children[1] = new KdTreeCell< ValueT, BaseT >(*cell._children[1]);
 		else
-			_children[1] = NULL;
+			_children[1] = nullptr;
 	}
 
 	template< class ValueT, class BaseT >
@@ -79,7 +79,7 @@ namespace GfxTL
 		RootRange(&range);
 		root->_box.Infinite();
 		Root(root.get());
-		Init(range, NULL, root.get());
+		Init(range, nullptr, root.get());
 		CellType *rootPtr = root.release();
 
 		typedef std::pair< CellType *, CellRange > Pair;
@@ -114,7 +114,7 @@ namespace GfxTL
 		{
 			auto newCell = std::make_unique< CellType >();
 			Root(newCell.get());
-			Init(range, NULL, newCell.get());
+			Init(range, nullptr, newCell.get());
 			cell = newCell.release();
 		}
 		Insert(cell, range, s);

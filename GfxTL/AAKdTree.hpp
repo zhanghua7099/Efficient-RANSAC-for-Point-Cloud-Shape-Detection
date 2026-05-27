@@ -19,11 +19,11 @@ namespace GfxTL
 		if(cell._children[0])
 			_children[0] = new AAKdCell< Point, Base >(*cell._children[0]);
 		else
-			_children[0] = NULL;
+			_children[0] = nullptr;
 		if(cell._children[1])
 			_children[1] = new AAKdCell< Point, Base >(*cell._children[1]);
 		else
-			_children[1] = NULL;
+			_children[1] = nullptr;
 	}
 
 	template< class Point, class Base >
@@ -167,7 +167,7 @@ namespace GfxTL
 					for(unsigned int i = 0; i < CellType::NChildren; ++i)
 					{
 						delete (*c)[i];
-						c->Child(i, NULL);
+							c->Child(i, nullptr);
 					}
 				}
 				else

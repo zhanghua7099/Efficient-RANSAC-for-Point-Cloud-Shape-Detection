@@ -3,12 +3,12 @@ namespace GfxTL
 {
 	template< class Cell >
 	BaseTree< Cell >::BaseTree()
-	: _root(NULL)
+	: _root(nullptr)
 	{}
 
 	template< class Cell >
 	BaseTree< Cell >::BaseTree(const BaseTree< Cell > &bt)
-	: _root(NULL)
+	: _root(nullptr)
 	{
 		if(bt._root)
 			_root = new Cell(*bt._root);
@@ -26,7 +26,7 @@ namespace GfxTL
 		if(_root)
 		{
 			delete _root;
-			_root = NULL;
+			_root = nullptr;
 		}
 	}
 
@@ -57,7 +57,7 @@ namespace GfxTL
 	template< class Cell >
 	bool BaseTree< Cell >::IsLeaf(const CellType *cell) const
 	{
-		return (*cell)[0] == NULL;
+		return (*cell)[0] == nullptr;
 	}
 
 	template< class Cell >

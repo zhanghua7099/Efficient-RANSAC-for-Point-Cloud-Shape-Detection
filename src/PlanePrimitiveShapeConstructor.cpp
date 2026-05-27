@@ -25,7 +25,7 @@ PrimitiveShape *PlanePrimitiveShapeConstructor::Construct(
 {
 	Plane plane;
 	if(!plane.Init(samples))
-		return NULL;
+		return nullptr;
 	return std::make_unique< PlanePrimitiveShape >(plane).release();
 }
 

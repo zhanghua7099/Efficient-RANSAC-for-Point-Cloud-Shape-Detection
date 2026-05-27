@@ -118,7 +118,7 @@ PrimitiveShape *ConePrimitiveShape::LSFit(const PointCloud &pc, float epsilon,
 		return std::make_unique< ConePrimitiveShape >(fit).release();
 	}
 	score->first = 0;
-	return NULL;
+	return nullptr;
 }
 
 LevMarFunc< float > *ConePrimitiveShape::SignedDistanceFunc() const

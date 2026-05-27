@@ -789,7 +789,7 @@ RansacShapeDetector::Detect(PointCloud &pc, size_t beginIdx, size_t endIdx,
 					octrees[0]->MaxSubdivisionLevel() = 10;
 					octrees[0]->ShuffleIndices(&shuffleIndices);
 					octrees[0]->Build(bcube);
-					octrees[0]->ShuffleIndices(NULL);
+					octrees[0]->ShuffleIndices(nullptr);
 					for(size_t i = 0; i < shuffleIndices.size(); ++i)
 						reindex[shuffleIndices[i]] = i;
 					// reindex global octree
@@ -998,8 +998,8 @@ PrimitiveShape *RansacShapeDetector::Fit(bool allowDifferentShapes,
 	std::pair< size_t, float > *score) const
 {
 	if(!m_constructors.size())
-		return NULL;
-	PrimitiveShape *bestShape = NULL;
+		return nullptr;
+	PrimitiveShape *bestShape = nullptr;
 	if(m_options.m_fitting == Options::LS_FITTING)
 		bestShape = initialShape.LSFit(pc, m_options.m_epsilon,
 			m_options.m_normalThresh, begin, end, score);

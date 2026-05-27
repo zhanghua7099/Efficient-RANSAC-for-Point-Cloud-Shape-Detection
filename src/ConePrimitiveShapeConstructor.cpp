@@ -22,10 +22,10 @@ PrimitiveShape *ConePrimitiveShapeConstructor::Construct(
 	Cone cone;
 	if(!cone.Init(points[0], points[1], points[2], normals[0], normals[1],
 		normals[2]))
-		return NULL;
+		return nullptr;
 	if(cone.Angle() > 1.4835298641951801403851371532153)
 		// do not allow cones with an opening angle of more than 85 degrees
-		return NULL;
+		return nullptr;
 	return std::make_unique< ConePrimitiveShape >(cone).release();
 }
 
@@ -34,7 +34,7 @@ PrimitiveShape *ConePrimitiveShapeConstructor::Construct(
 {
 	Cone cone;
 	if(!cone.Init(samples))
-		return NULL;
+		return nullptr;
 	return std::make_unique< ConePrimitiveShape >(cone).release();
 }
 

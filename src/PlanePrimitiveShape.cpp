@@ -108,7 +108,7 @@ PrimitiveShape *PlanePrimitiveShape::LSFit(const PointCloud &pc, float epsilon,
 		return std::make_unique< PlanePrimitiveShape >(fit).release();
 	}
 	score->first = 0;
-	return NULL;
+	return nullptr;
 }
 
 void PlanePrimitiveShape::Serialize(std::ostream *o, bool binary) const

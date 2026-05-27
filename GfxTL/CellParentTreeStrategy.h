@@ -57,7 +57,7 @@ struct CellParentTreeStrategy
 		void InitRootBuildInformation(BuildInformationT *bi)
 		{
 			BaseType::InitRootBuildInformation(bi);
-			bi->Parent(NULL);
+			bi->Parent(nullptr);
 		}
 
 		template< class BuildInformationT >

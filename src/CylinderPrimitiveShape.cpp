@@ -134,7 +134,7 @@ PrimitiveShape *CylinderPrimitiveShape::LSFit(const PointCloud &pc,
 		return std::make_unique< CylinderPrimitiveShape >(fit).release();
 	}
 	score->first = 0;
-	return NULL;
+	return nullptr;
 }
 
 LevMarFunc< float > *CylinderPrimitiveShape::SignedDistanceFunc() const

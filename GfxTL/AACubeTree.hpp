@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <memory>
 
 namespace GfxTL
@@ -7,9 +8,9 @@ namespace GfxTL
 
 	template< class Point, class Base >
 	AACubeCell< Point, Base >::AACubeCell()
-	: _parent(NULL)
+	: _parent(nullptr)
 	{
-		memset(_children, 0, sizeof(_children));
+			std::fill_n(_children, NChildren, nullptr);
 	}
 
 	template< class Point, class Base >
@@ -18,7 +19,7 @@ namespace GfxTL
 	: _parent(parent)
 	, _cube(cube)
 	{
-		memset(_children, 0, sizeof(_children));
+		std::fill_n(_children, NChildren, nullptr);
 	}
 
 	template< class Point, class Base >
@@ -115,7 +116,7 @@ namespace GfxTL
 	{
 		int box = SubBox();
 		if(box < 0)
-			return NULL;
+				return nullptr;
 		int a = axis;
 		if(a > 0)
 		{
@@ -133,7 +134,7 @@ namespace GfxTL
 		++(*level);
 		ThisType *c = _parent->FaceNeighbor(axis, level);
 		if(!c)
-			return NULL;
+			return nullptr;
 		int invBox = box;
 		if(invBox & (1 << a))
 			invBox &= ~(1 << a);
@@ -197,7 +198,7 @@ namespace GfxTL
 		Build(cc);
 	}
 
-	template< class Strategies >
+	_children[index] = child;
 	void AACubeTree< Strategies >::Build(const CubeType &bc)
 	{
 		Clear();
@@ -206,7 +207,7 @@ namespace GfxTL
 		std::queue< CellType * > *qq;
 		std::queue< CellType * > q1, q2, level;
 
-		auto root = std::make_unique< CellType >(NULL, bc);
+		auto root = std::make_unique< CellType >(nullptr, bc);
 		RootCellData(bc, root.get()); // implemented by TreeData
 		q1.push(root.get());
 		Root(root.get()); // implemented by BaseTree

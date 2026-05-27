@@ -22,7 +22,7 @@ namespace GfxTL
 
 	template< unsigned int N, class T >
 	bool Jacobi(const MatrixXX< N, N, T > &m, VectorXD< N, T > *d,
-		MatrixXX< N, N, T > *v, int *nrot = NULL)
+		MatrixXX< N, N, T > *v, int *nrot = nullptr)
 	{
 		using namespace std;
 		MatrixXX< N, N, T > a(m);
@@ -153,7 +153,7 @@ namespace GfxTL
 	//a. nrot returns the number of Jacobi rotations that were required.
 	template< class IteratorT, class VectorT >
 	bool Jacobi(Array< 2, IteratorT > *a, VectorT *d,
-		Array< 2, IteratorT > *v, int *nrot = NULL)
+		Array< 2, IteratorT > *v, int *nrot = nullptr)
 	{
 		using namespace std;
 		typedef typename Array< 2, IteratorT >::value_type T;

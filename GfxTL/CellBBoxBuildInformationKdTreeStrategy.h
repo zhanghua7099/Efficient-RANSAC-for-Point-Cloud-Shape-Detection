@@ -28,8 +28,8 @@ namespace GfxTL
 
 			StrategyBase()
 			{
-				m_bbox[0] = NULL;
-				m_bbox[1] = NULL;
+				m_bbox[0] = nullptr;
+				m_bbox[1] = nullptr;
 			}
 
 			~StrategyBase()

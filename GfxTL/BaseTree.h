@@ -29,7 +29,10 @@ namespace GfxTL
 			void LeafDepthVariance(size_t *numLeaves, ScalarT *variance) const;
 
 		protected:
-			CellType *InnerNodeMarker() const { return (CellType *)1; }
+			CellType *InnerNodeMarker() const
+			{
+				return reinterpret_cast< CellType * >(1);
+			}
 
 		private:
 			CellType *m_root;
@@ -38,7 +41,7 @@ namespace GfxTL
 	template< class Cell >
 	inline bool BaseTree< Cell >::IsLeaf(const CellType &cell) const
 	{
-		return cell.Child(0) == NULL;
+		return cell.Child(0) == nullptr;
 	}
 
 	template< class Cell >
@@ -46,17 +49,17 @@ namespace GfxTL
 		unsigned int i) const
 	{
 		const CellType *child = cell.Child(i);
-		return child != NULL && child != InnerNodeMarker();
+		return child != nullptr && child != InnerNodeMarker();
 	}
 
 	template< class Cell >
 	BaseTree< Cell >::BaseTree()
-	: m_root(NULL)
+	: m_root(nullptr)
 	{}
 
 	template< class Cell >
 	BaseTree< Cell >::BaseTree(const BaseTree< Cell > &bt)
-	: m_root(NULL)
+	: m_root(nullptr)
 	{
 		if(bt.m_root)
 			m_root = new Cell(*bt.m_root);
@@ -74,7 +77,7 @@ namespace GfxTL
 		if(m_root)
 		{
 			delete m_root;
-			m_root = NULL;
+			m_root = nullptr;
 		}
 	}
 

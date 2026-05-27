@@ -1,0 +1,21 @@
+[build-system]
+requires = [
+    "scikit-build-core>=0.8",
+    "nanobind>=2.0,<2.10",
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "pc-ransac"
+version = "0.1.0"
+description = "Python bindings for Efficient RANSAC point-cloud shape detection"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "numpy",
+]
+
+[tool.scikit-build]
+cmake.minimum-version = "3.18"
+cmake.define.PC_RANSAC_BUILD_PYTHON = "ON"
+wheel.packages = []

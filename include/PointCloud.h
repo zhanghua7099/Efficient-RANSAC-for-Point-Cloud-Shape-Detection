@@ -4,7 +4,9 @@
 #ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
 #endif
+#include <array>
 #include <cmath>
+#include <memory>
 #include <MiscLib/Vector.h>
 #include <limits>
 #include <GfxTL/VectorXD.h>
@@ -97,6 +99,9 @@ public:
 	   return std::max(std::max(diff[0], diff[1]), diff[2]);
 	}
 	const Vec3f &getOffset() const { return m_min; }
+	std::array< float, 6 > getBboxArray() const;
+	std::unique_ptr< float[] > getBboxUnique() const;
+	[[deprecated("use getBboxArray() or getBboxUnique() instead")]]
 	float *getBbox () const;
 	// returns a transfromed bbox if m_transformed is true
 	void GetCurrentBBox(Vec3f *min, Vec3f *max) const;

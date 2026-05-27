@@ -7,6 +7,7 @@
 #include <ctime>
 #include <deque>
 #include <iostream>
+#include <memory>
 #include <MiscLib/Random.h>
 #include "Candidate.h"
 #include <MiscLib/Performance.h>
@@ -21,6 +22,20 @@
 
 using namespace MiscLib;
 
+namespace
+{
+	struct RefCountRelease
+	{
+		void operator()(PrimitiveShape *shape) const
+		{
+			if(shape)
+				shape->Release();
+		}
+	};
+
+	typedef std::unique_ptr< PrimitiveShape, RefCountRelease > PrimitiveShapeOwner;
+}
+
 RansacShapeDetector::RansacShapeDetector()
 : m_maxCandTries(20)
 , m_reqSamples(0)
@@ -34,19 +49,20 @@ RansacShapeDetector::RansacShapeDetector(const Options &options)
 , m_autoAcceptSize(0)
 {}
 
-RansacShapeDetector::~RansacShapeDetector()
+RansacShapeDetector::~RansacShapeDetector() = default;
+
+void RansacShapeDetector::Add(ConstructorPtr c)
 {
-	for(ConstructorsType::iterator i = m_constructors.begin(),
-		iend = m_constructors.end(); i != iend; ++i)
-		(*i)->Release();
+	if(!c)
+		return;
+	if(c->RequiredSamples() > m_reqSamples)
+		m_reqSamples = c->RequiredSamples();
+	m_constructors.push_back(std::move(c));
 }
 
 void RansacShapeDetector::Add(PrimitiveShapeConstructor *c)
 {
-	c->AddRef();
-	m_constructors.push_back(c);
-	if(c->RequiredSamples() > m_reqSamples)
-		m_reqSamples = c->RequiredSamples();
+	Add(ConstructorPtr(c));
 }
 
 size_t RansacShapeDetector::StatBucket(float score) const
@@ -89,7 +105,7 @@ void RansacShapeDetector::UpdateLevelWeights(float factor,
 template< class ScoreVisitorT >
 void RansacShapeDetector::GenerateCandidates(
 	const IndexedOctreeType &globalOctree,
-	const MiscLib::Vector< ImmediateOctreeType * > &octrees,
+	const ImmediateOctreesType &octrees,
 	const PointCloud &pc, ScoreVisitorT &scoreVisitor,
 	size_t currentSize, size_t numInvalid,
 	const MiscLib::Vector< double > &sampleLevelProbSum,
@@ -132,12 +148,13 @@ void RansacShapeDetector::GenerateCandidates(
 			samplePoints[i + c] = globalOctree.at(samples[i]).normal;
 		}
 		// construct the different primitive shapes
-		PrimitiveShape *shape;
 		for(ConstructorsType::const_iterator i = m_constructors.begin(),
 			iend = m_constructors.end(); i != iend; ++i)
 		{
-			if((*i)->RequiredSamples() > samples.size() 
-					|| !(shape = (*i)->Construct(samplePoints)))
+			if((*i)->RequiredSamples() > samples.size())
+				continue;
+			PrimitiveShapeOwner shape((*i)->Construct(samplePoints));
+			if(!shape)
 				continue;
 			// verify shape
 			std::pair< float, float > dn;
@@ -152,14 +169,10 @@ void RansacShapeDetector::GenerateCandidates(
 				}
 			}
 			if(!verified)
-			{
-				shape->Release();
 				continue;
-			}
-			Candidate cand(shape, node->Level());
+			Candidate cand(shape.get(), node->Level());
 			cand.Indices(new MiscLib::RefCounted< MiscLib::Vector< size_t > >);
 			cand.Indices()->Release();
-			shape->Release();
 			cand.ImproveBounds(octrees, pc, scoreVisitorCopy,
 				currentSize, m_options.m_bitmapEpsilon, 1);
 			if(cand.UpperBound() < m_options.m_minSupport)
@@ -200,7 +213,7 @@ struct CandidateHeapPred
 
 template< class ScoreVisitorT >
 bool RansacShapeDetector::FindBestCandidate(CandidatesType &candidates,
-	const MiscLib::Vector< ImmediateOctreeType * > &octrees, const PointCloud &pc,
+	const ImmediateOctreesType &octrees, const PointCloud &pc,
 	ScoreVisitorT &scoreVisitor, size_t currentSize,
 	size_t drawnCandidates, size_t numInvalid, size_t minSize, float numLevels,
 	float *maxForgottenCandidate, float *candidateFailProb) const
@@ -478,7 +491,7 @@ RansacShapeDetector::Detect(PointCloud &pc, size_t beginIdx, size_t endIdx,
 	bcube.Bound(pc.begin() + beginIdx, pc.begin() + endIdx); 
 
 	// construct stratified subsets
-	MiscLib::Vector< ImmediateOctreeType * > octrees(subsets);
+	ImmediateOctreesType octrees(subsets);
 	for(size_t i = octrees.size(); i;)
 	{
 		--i;
@@ -502,7 +515,7 @@ RansacShapeDetector::Detect(PointCloud &pc, size_t beginIdx, size_t endIdx,
 			for(size_t j = pcSize - 1, i = 0; i < subsetIndices.size(); --j, ++i)
 				std::swap(pc[j + beginIdx], pc[subsetIndices[i]]);
 		}
-		octrees[i] = new ImmediateOctreeType;
+		octrees[i] = std::make_unique< ImmediateOctreeType >();
 		octrees[i]->ContainedData(&pc);
 		octrees[i]->DataRange(pcSize - subsetSize + beginIdx,
 			pcSize + beginIdx);
@@ -637,17 +650,16 @@ RansacShapeDetector::Detect(PointCloud &pc, size_t beginIdx, size_t endIdx,
 					oldScore = newScore;
 					oldSize = newSize;
 					std::pair< size_t, float > score;
-                    PrimitiveShape *shape = Fit(allowDifferentShapes, *clone.Shape(),
-                                                pc, clone.Indices()->begin(), clone.Indices()->end(),
-                                                &score);
-                    if(shape)
+					PrimitiveShapeOwner shape(Fit(allowDifferentShapes, *clone.Shape(),
+						pc, clone.Indices()->begin(), clone.Indices()->end(),
+						&score));
+					if(shape)
 					{
-						clone.Shape(shape);
+						clone.Shape(shape.get());
 						newScore = clone.GlobalWeightedScore( globalScoreVisitor, globalOctree,
 							pc, 3 * m_options.m_epsilon, m_options.m_normalThresh,
 							m_options.m_bitmapEpsilon );
 						newSize = clone.Size();
-						shape->Release();
 						if(newScore > oldScore && newSize > m_options.m_minSupport)
 							clone.Clone(&candidates.back());
 					}
@@ -716,7 +728,6 @@ RansacShapeDetector::Detect(PointCloud &pc, size_t beginIdx, size_t endIdx,
 					{
 						subsetSizes[1] += subsetSizes[0];
 						subsetSizes.erase(subsetSizes.begin());
-						delete octrees[0];
 						octrees.erase(octrees.begin());
 						++mergedSubsets;
 					}
@@ -760,8 +771,7 @@ RansacShapeDetector::Detect(PointCloud &pc, size_t beginIdx, size_t endIdx,
 						reindex(beginIdx + subsetSizes[0]);
 					for(size_t i = 0; i < shuffleIndices.size(); ++i)
 						shuffleIndices[i] = i;
-					delete octrees[0];
-					octrees[0] = new ImmediateOctreeType();
+					octrees[0] = std::make_unique< ImmediateOctreeType >();
 					octrees[0]->ContainedData(&pc);
 					octrees[0]->DataRange(beginIdx, beginIdx + subsetSizes[0]);
 					octrees[0]->MaxBucketSize() = 20;
@@ -904,9 +914,6 @@ RansacShapeDetector::Detect(PointCloud &pc, size_t beginIdx, size_t endIdx,
 				std::swap(shapeIndex[i], shapeIndex[shapeIndex[i]]);
 			}
 	}
-	// clean up subset octrees
-	for(size_t i = 0; i < octrees.size(); ++i)
-		delete octrees[i];
 	// optimize parametrizations
 	size_t eidx = endIdx;
 	for(size_t i = 0; i < shapes->size(); ++i)

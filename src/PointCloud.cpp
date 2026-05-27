@@ -145,13 +145,25 @@ void PointCloud::reset(size_t s)
 	m_max = Vec3f(fmin, fmin, fmin);
 }
 
-float *PointCloud::getBbox () const
+std::array< float, 6 > PointCloud::getBboxArray() const
 {
-	float *bbox = new float[6];
+	std::array< float, 6 > bbox;
 	m_min.getValue(bbox[0], bbox[2], bbox[4]);
 	m_max.getValue(bbox[1], bbox[3], bbox[5]);
-
 	return bbox;
+}
+
+std::unique_ptr< float[] > PointCloud::getBboxUnique() const
+{
+	std::array< float, 6 > bboxArray = getBboxArray();
+	std::unique_ptr< float[] > bbox = std::make_unique< float[] >(bboxArray.size());
+	std::copy(bboxArray.begin(), bboxArray.end(), bbox.get());
+	return bbox;
+}
+
+float *PointCloud::getBbox () const
+{
+	return getBboxUnique().release();
 }
 
 void PointCloud::GetCurrentBBox(Vec3f *min, Vec3f *max) const
@@ -242,15 +254,14 @@ void PointCloud::calcNormals ( float radius, unsigned int kNN, unsigned int maxT
 				continue;
 			
 			//evaluate metric
-			float *dist = new float[num];
+			std::vector< float > dist(num);
 			for (unsigned int j = 0; j < num; j++)
 			{
 				dist[j] = plane.getDistance(at(nn[j]));
 			}
 	//		sort(dist, dist+num);
 		//	score = dist[num/2]; // evaluate median
-			score = quick_select(dist, num); // evaluate median
-			delete[] dist;
+			score = quick_select(dist.data(), num); // evaluate median
 
 			if (score < bestScore || bestScore < 0.f)
 			{

@@ -12,6 +12,9 @@
 #include <GfxTL/ImmediateTreeDataKernels.h>
 #include <algorithm>
 #include <cmath>
+#include <memory>
+#include <type_traits>
+#include <vector>
 
 #ifndef DLL_LINKAGE
 #define DLL_LINKAGE
@@ -40,6 +43,23 @@ class DLL_LINKAGE RansacShapeDetector
 		RansacShapeDetector();
 		RansacShapeDetector(const Options &options);
 		virtual ~RansacShapeDetector();
+		struct ConstructorDeleter
+		{
+			void operator()(PrimitiveShapeConstructor *c) const
+			{
+				if(c)
+					c->Release();
+			}
+		};
+		typedef std::unique_ptr< PrimitiveShapeConstructor, ConstructorDeleter > ConstructorPtr;
+		void Add(ConstructorPtr c);
+		template< class ConstructorT, class DeleterT >
+		void Add(std::unique_ptr< ConstructorT, DeleterT > c)
+		{
+			static_assert(std::is_base_of< PrimitiveShapeConstructor, ConstructorT >::value,
+				"RansacShapeDetector::Add expects a PrimitiveShapeConstructor");
+			Add(ConstructorPtr(c.release()));
+		}
 		void Add(PrimitiveShapeConstructor *c);
 		size_t Detect(PointCloud &pc, size_t begin, size_t end,
 			MiscLib::Vector< std::pair< MiscLib::RefCountPtr< PrimitiveShape >, size_t > > *shapes);
@@ -48,7 +68,8 @@ class DLL_LINKAGE RansacShapeDetector
 		const Options &GetOptions() const { return m_options; }
 
 	private:
-		typedef MiscLib::Vector< PrimitiveShapeConstructor * > ConstructorsType;
+		typedef std::vector< ConstructorPtr > ConstructorsType;
+		typedef std::vector< std::unique_ptr< ImmediateOctreeType > > ImmediateOctreesType;
 		typedef MiscLib::NoShrinkVector< Candidate > CandidatesType;
 		bool DrawSamplesStratified(const IndexedOctreeType &oct,
 			size_t numSamples, size_t depth,
@@ -91,7 +112,7 @@ class DLL_LINKAGE RansacShapeDetector
 		template< class ScoreVisitorT >
 		void GenerateCandidates(
 			const IndexedOctreeType &globalOctTree,
-			const MiscLib::Vector< ImmediateOctreeType * > &octrees,
+			const ImmediateOctreesType &octrees,
 			const PointCloud &pc, ScoreVisitorT &scoreVisitor,
 			size_t currentSize, size_t numInvalid,
 			const MiscLib::Vector< double > &sampleLevelProbSum,
@@ -101,7 +122,7 @@ class DLL_LINKAGE RansacShapeDetector
 			CandidatesType *candidates) const;
 		template< class ScoreVisitorT >
 		bool FindBestCandidate(CandidatesType &candidates,
-			const MiscLib::Vector< ImmediateOctreeType * > &octrees,
+			const ImmediateOctreesType &octrees,
 			const PointCloud &pc, ScoreVisitorT &scoreVisitor,
 			size_t currentSize, size_t drawnCandidates,
 			size_t numInvalid, size_t minSize, float numLevels,

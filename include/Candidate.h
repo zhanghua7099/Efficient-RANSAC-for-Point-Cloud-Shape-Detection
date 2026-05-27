@@ -10,6 +10,8 @@
 #include <MiscLib/NoShrinkVector.h>
 #include "Octree.h"
 #include <algorithm>
+#include <memory>
+#include <vector>
 
 #ifndef DLL_LINKAGE
 #define DLL_LINKAGE
@@ -32,12 +34,12 @@ public:
 	size_t Level() const { return m_level; }
 	void Reset();
 	template< class ScoreVisitorT >
-	bool ImproveBounds(const MiscLib::Vector< ImmediateOctreeType * > &octrees,
+	bool ImproveBounds(const std::vector< std::unique_ptr< ImmediateOctreeType > > &octrees,
 		const PointCloud &pc, ScoreVisitorT &scoreVisitor,
 		size_t currentSize, float bitmapEpsilon,
 		size_t maxSubset, size_t minPoints = 500);
 	template< class ScoreVisitorT >
-	void RecomputeBounds(const MiscLib::Vector< ImmediateOctreeType * > &octrees,
+	void RecomputeBounds(const std::vector< std::unique_ptr< ImmediateOctreeType > > &octrees,
 		const PointCloud &pc, ScoreVisitorT &scoreVisitor, size_t currentSize,
 		float epsilon, float normalThresh, float bitmapEpsilon);
 	void Reindex(const MiscLib::Vector< int > &newIndices, int minInvalidIndex,
@@ -152,7 +154,7 @@ void Candidate::Deduct(double totalSize, double sampleSize,
 }
 
 template< class ScoreVisitorT >
-bool Candidate::ImproveBounds(const MiscLib::Vector< ImmediateOctreeType * > &octrees,
+bool Candidate::ImproveBounds(const std::vector< std::unique_ptr< ImmediateOctreeType > > &octrees,
 	const PointCloud &pc, ScoreVisitorT &scoreVisitor,
 	size_t currentSize, float bitmapEpsilon,
 	size_t maxSubset, size_t minPoints)
@@ -213,7 +215,7 @@ bool Candidate::ImproveBounds(const MiscLib::Vector< ImmediateOctreeType * > &oc
 }
 
 template< class ScoreVisitorT >
-void Candidate::RecomputeBounds(const MiscLib::Vector< ImmediateOctreeType * > &octrees,
+void Candidate::RecomputeBounds(const std::vector< std::unique_ptr< ImmediateOctreeType > > &octrees,
 	const PointCloud &pc, ScoreVisitorT &scoreVisitor, size_t currentSize,
 	float epsilon, float normalThresh, float bitmapEpsilon)
 {

@@ -290,8 +290,15 @@ bool Sphere::Init(bool binary, std::istream *i)
 
 void Sphere::Init(FILE *i)
 {
-	fread(&m_center, sizeof(m_center), 1, i);
-	fread(&m_radius, sizeof(m_radius), 1, i);
+	if(!i)
+		return;
+	Vec3f center;
+	float radius;
+	if(fread(&center, sizeof(center), 1, i) != 1
+		|| fread(&radius, sizeof(radius), 1, i) != 1)
+		return;
+	m_center = center;
+	m_radius = radius;
 }
 
 void Sphere::Init(float *array)

@@ -324,12 +324,20 @@ bool Torus::Init(bool binary, std::istream *i)
 
 void Torus::Init(FILE *i)
 {
-	float rot; // dummy rotation placeholder
-	fread(&m_normal, sizeof(m_normal), 1, i);
-	fread(&m_center, sizeof(m_center), 1, i);
-	fread(&m_rminor, sizeof(m_rminor), 1, i);
-	fread(&m_rmajor, sizeof(m_rmajor), 1, i);
-	fread(&rot, sizeof(rot), 1, i);
+	if(!i)
+		return;
+	Vec3f normal, center;
+	float rminor, rmajor, rot; // dummy rotation placeholder
+	if(fread(&normal, sizeof(normal), 1, i) != 1
+		|| fread(&center, sizeof(center), 1, i) != 1
+		|| fread(&rminor, sizeof(rminor), 1, i) != 1
+		|| fread(&rmajor, sizeof(rmajor), 1, i) != 1
+		|| fread(&rot, sizeof(rot), 1, i) != 1)
+		return;
+	m_normal = normal;
+	m_center = center;
+	m_rminor = rminor;
+	m_rmajor = rmajor;
 	m_appleShaped = m_rmajor < m_rminor;
 	ComputeAppleParams();
 }

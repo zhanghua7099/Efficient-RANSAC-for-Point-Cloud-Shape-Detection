@@ -358,11 +358,18 @@ void Cone::Init(float *array)
 
 void Cone::Init(FILE *i)
 {
-	float rotate = 0;
-	fread(&m_center, sizeof(m_center), 1, i);
-	fread(&m_axisDir, sizeof(m_axisDir), 1, i);
-	fread(&m_angle, sizeof(m_angle), 1, i);
-	fread(&rotate, sizeof(rotate), 1, i);
+	if(!i)
+		return;
+	Vec3f center, axisDir;
+	float angle, rotate;
+	if(fread(&center, sizeof(center), 1, i) != 1
+		|| fread(&axisDir, sizeof(axisDir), 1, i) != 1
+		|| fread(&angle, sizeof(angle), 1, i) != 1
+		|| fread(&rotate, sizeof(rotate), 1, i) != 1)
+		return;
+	m_center = center;
+	m_axisDir = axisDir;
+	m_angle = angle;
 	m_normal = Vec3f(std::cos(-m_angle), std::sin(-m_angle), 0);
 	m_normalY = m_normal[1] * m_axisDir;
 	m_n2d[0] = std::cos(m_angle);

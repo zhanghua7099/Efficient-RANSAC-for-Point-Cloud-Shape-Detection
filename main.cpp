@@ -9,6 +9,7 @@
 #include <TorusPrimitiveShapeConstructor.h>
 
 #include<iostream>
+#include<memory>
 
 
 
@@ -49,14 +50,14 @@ int main()
 	RansacShapeDetector detector(ransacOptions); // the detector object
 
 	// set which primitives are to be detected by adding the respective constructors
-	detector.Add(new PlanePrimitiveShapeConstructor());
-	detector.Add(new CylinderPrimitiveShapeConstructor());
+	detector.Add(std::make_unique< PlanePrimitiveShapeConstructor >());
+	detector.Add(std::make_unique< CylinderPrimitiveShapeConstructor >());
 
 	/*
-	detector.Add(new SpherePrimitiveShapeConstructor());
-	detector.Add(new CylinderPrimitiveShapeConstructor());
-	detector.Add(new ConePrimitiveShapeConstructor());
-	detector.Add(new TorusPrimitiveShapeConstructor());
+	detector.Add(std::make_unique< SpherePrimitiveShapeConstructor >());
+	detector.Add(std::make_unique< CylinderPrimitiveShapeConstructor >());
+	detector.Add(std::make_unique< ConePrimitiveShapeConstructor >());
+	detector.Add(std::make_unique< TorusPrimitiveShapeConstructor >());
 	*/
 
 	MiscLib::Vector< std::pair< MiscLib::RefCountPtr< PrimitiveShape >, size_t > > shapes; // stores the detected shapes
@@ -129,14 +130,14 @@ int main()
 // 	RansacShapeDetector detector(ransacOptions); // the detector object
 
 // 	// set which primitives are to be detected by adding the respective constructors
-// 	detector.Add(new PlanePrimitiveShapeConstructor());
-// 	detector.Add(new CylinderPrimitiveShapeConstructor());
+// 	detector.Add(std::make_unique< PlanePrimitiveShapeConstructor >());
+// 	detector.Add(std::make_unique< CylinderPrimitiveShapeConstructor >());
 
 // 	/*
-// 	detector.Add(new SpherePrimitiveShapeConstructor());
-// 	detector.Add(new CylinderPrimitiveShapeConstructor());
-// 	detector.Add(new ConePrimitiveShapeConstructor());
-// 	detector.Add(new TorusPrimitiveShapeConstructor());
+// 	detector.Add(std::make_unique< SpherePrimitiveShapeConstructor >());
+// 	detector.Add(std::make_unique< CylinderPrimitiveShapeConstructor >());
+// 	detector.Add(std::make_unique< ConePrimitiveShapeConstructor >());
+// 	detector.Add(std::make_unique< TorusPrimitiveShapeConstructor >());
 // 	*/
 
 // 	MiscLib::Vector< std::pair< MiscLib::RefCountPtr< PrimitiveShape >, size_t > > shapes; // stores the detected shapes

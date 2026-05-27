@@ -93,9 +93,17 @@ void Plane::Init(float* array){
 
 void Plane::Init(FILE *i)
 {
-	fread(&m_normal, sizeof(m_normal), 1, i);
-	fread(&m_dist, sizeof(m_dist), 1, i);
-	fread(&m_pos, sizeof(m_pos), 1, i);
+	if(!i)
+		return;
+	Vec3f normal, pos;
+	float dist;
+	if(fread(&normal, sizeof(normal), 1, i) != 1
+		|| fread(&dist, sizeof(dist), 1, i) != 1
+		|| fread(&pos, sizeof(pos), 1, i) != 1)
+		return;
+	m_normal = normal;
+	m_dist = dist;
+	m_pos = pos;
 }
 
 bool Plane::equals (Plane other)

@@ -220,11 +220,18 @@ bool Cylinder::Init(bool binary, std::istream *i)
 
 void Cylinder::Init(FILE *i)
 {
-	float rotate = 0;
-	fread(&m_axisDir, sizeof(m_axisDir), 1, i);
-	fread(&m_axisPos, sizeof(m_axisPos), 1, i);
-	fread(&m_radius, sizeof(m_radius), 1, i);
-	fread(&rotate, sizeof(rotate), 1, i);
+	if(!i)
+		return;
+	Vec3f axisDir, axisPos;
+	float radius, rotate;
+	if(fread(&axisDir, sizeof(axisDir), 1, i) != 1
+		|| fread(&axisPos, sizeof(axisPos), 1, i) != 1
+		|| fread(&radius, sizeof(radius), 1, i) != 1
+		|| fread(&rotate, sizeof(rotate), 1, i) != 1)
+		return;
+	m_axisDir = axisDir;
+	m_axisPos = axisPos;
+	m_radius = radius;
 	m_hcs.FromNormal(m_axisDir);
 	m_angularRotatedRadians = 0;
 	RotateAngularDirection(rotate);

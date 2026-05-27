@@ -130,6 +130,10 @@ template< class CellT >
 class ConstArrayGridAccessor< CellT, 0 >
 {
 public:
+	ConstArrayGridAccessor(const CellT &cell)
+	: m_cell(cell)
+	{}
+
 	ConstArrayGridAccessor(unsigned int *, const CellT &cell)
 	: m_cell(cell)
 	{}
@@ -166,7 +170,7 @@ public:
 
 	void Clear()
 	{
-		delete this->m_array;
+		delete[] this->m_array;
 		this->m_array = NULL;
 	}
 

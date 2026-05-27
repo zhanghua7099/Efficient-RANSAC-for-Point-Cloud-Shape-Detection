@@ -1,7 +1,10 @@
 #ifndef LEVMARFITTING_HEADER
 #define LEVMARFITTING_HEADER
 #include <algorithm>
+#include <cmath>
+#include <cstring>
 #include <iostream>
+#include <vector>
 #include "LevMarFunc.h"
 #ifdef DOPARALLEL
 #include <omp.h>
@@ -126,15 +129,15 @@ bool LevMar(IteratorT begin, IteratorT end, FuncT &func,
 	if(!totalSize)
 		return false;
 	ScalarType lambda = ScalarType(0.0001);
-	ScalarType *F0 = new ScalarType[totalSize * paramDim];
-	ScalarType *U = new ScalarType[paramDim * paramDim];
-	ScalarType *H = new ScalarType[paramDim * paramDim];
-	ScalarType *v = new ScalarType[paramDim];
-	ScalarType *d = new ScalarType[totalSize];
-	ScalarType *temp = new ScalarType[totalSize];
-	ScalarType *x = new ScalarType[paramDim];
-	ScalarType *p = new ScalarType[paramDim];
-	ScalarType *paramNew = new ScalarType[paramDim];
+	std::vector< ScalarType > F0(totalSize * paramDim);
+	std::vector< ScalarType > U(paramDim * paramDim);
+	std::vector< ScalarType > H(paramDim * paramDim);
+	std::vector< ScalarType > v(paramDim);
+	std::vector< ScalarType > d(totalSize);
+	std::vector< ScalarType > temp(totalSize);
+	std::vector< ScalarType > x(paramDim);
+	std::vector< ScalarType > p(paramDim);
+	std::vector< ScalarType > paramNew(paramDim);
 	size_t nu = 2;
 	func.Normalize(param);
 	ScalarType paramNorm = 0;
@@ -170,7 +173,7 @@ bool LevMar(IteratorT begin, IteratorT end, FuncT &func,
 	{
 		// get current error
 		size += subsetSizes[curSubset];
-		newChi = func.Chi(param, begin, begin + size, d, temp);
+		newChi = func.Chi(param, begin, begin + size, d.data(), temp.data());
 		for(unsigned int i = 0; i < paramDim; ++i)
 			paramNew[i] = param[i];
 		outerIter = 0;
@@ -200,7 +203,7 @@ bool LevMar(IteratorT begin, IteratorT end, FuncT &func,
 				// construct the needed matrices
 				// F0 is the matrix constructed from param
 				// F0 has gradient_i(param) as its ith row
-				func.Derivatives(param, begin, begin + size, d, temp, F0);
+				func.Derivatives(param, begin, begin + size, d.data(), temp.data(), F0.data());
 				// U = F0_t * F0
 				// v = F0_t * d(param) (d(param) = [d_i(param)])
 #ifdef DOPARALLEL
@@ -261,15 +264,15 @@ bool LevMar(IteratorT begin, IteratorT end, FuncT &func,
 					lambda *= std::max( ScalarType(0.3), 1 - ScalarType(std::pow(2 * rho - 1, 3)) );
 			}
 
-			memcpy(H, U, sizeof(ScalarType) * paramDim * paramDim);
+			memcpy(H.data(), U.data(), sizeof(ScalarType) * paramDim * paramDim);
 			for(size_t i = 0; i < paramDim; ++i)
 				H[i * paramDim + i] += lambda; // * (ScalarType(1) + H[i * paramDim + i]);
 			// now H is positive definite and symmetric
 			// solve Hx = -v with Cholesky
 			ScalarType xNorm = 0, L = 0;
-			if(!Cholesky< ScalarType, paramDim >(H, p))
+			if(!Cholesky< ScalarType, paramDim >(H.data(), p.data()))
 				goto increment;
-			CholeskySolve< ScalarType, paramDim >(H, p, v, x);
+			CholeskySolve< ScalarType, paramDim >(H.data(), p.data(), v.data(), x.data());
 
 			// magnitude of x small? If yes we are done
 			for(size_t i = 0; i < paramDim; ++i)
@@ -288,10 +291,10 @@ bool LevMar(IteratorT begin, IteratorT end, FuncT &func,
 
 			for(size_t i = 0; i < paramDim; ++i)
 				paramNew[i] = param[i] + x[i];
-			func.Normalize(paramNew);
+			func.Normalize(paramNew.data());
 
 			// get new error
-			newChi = func.Chi(paramNew, begin, begin + size, d, temp);
+			newChi = func.Chi(paramNew.data(), begin, begin + size, d.data(), temp.data());
 
 			// the following test is taken from
 			// "Methods for non-linear least squares problems"
@@ -330,15 +333,6 @@ bool LevMar(IteratorT begin, IteratorT end, FuncT &func,
 	}
 	while(curSubset < subsetSizes.size());
 	retVal = usefulIter > 0;
-	delete[] F0;
-	delete[] U;
-	delete[] H ;
-	delete[] v;
-	delete[] d;
-	delete[] temp;
-	delete[] x;
-	delete[] p;
-	delete[] paramNew;
 	return retVal;
 }
 
@@ -349,15 +343,17 @@ ScalarT LevMar(unsigned int paramDim, unsigned int imgDim,
 	ScalarT retVal = -1;
 	size_t size = imgDim;
 	float lambda = ScalarT(0.0001);
-	ScalarT *F0 = new ScalarT[size * paramDim];
-	ScalarT *U = new ScalarT[paramDim * paramDim];
-	ScalarT *H = new ScalarT[paramDim * paramDim];
-	ScalarT *v = new ScalarT[paramDim];
-	ScalarT *d = new ScalarT[size];
-	ScalarT *dNew = new ScalarT[size];
-	ScalarT *x = new ScalarT[paramDim];
-	ScalarT *p = new ScalarT[paramDim];
-	ScalarT *paramNew = new ScalarT[paramDim];
+	std::vector< ScalarT > F0(size * paramDim);
+	std::vector< ScalarT > U(paramDim * paramDim);
+	std::vector< ScalarT > H(paramDim * paramDim);
+	std::vector< ScalarT > v(paramDim);
+	std::vector< ScalarT > dStorage(size);
+	std::vector< ScalarT > dNewStorage(size);
+	std::vector< ScalarT > x(paramDim);
+	std::vector< ScalarT > p(paramDim);
+	std::vector< ScalarT > paramNew(paramDim);
+	ScalarT *d = dStorage.data();
+	ScalarT *dNew = dNewStorage.data();
 	size_t outerIter = 0, maxOuterIter = 10;
 	// get current error
 	ScalarT chi = 0, newChi;
@@ -398,21 +394,21 @@ ScalarT LevMar(unsigned int paramDim, unsigned int imgDim,
 			++iter;
 			// increment lambda
 			lambda = 10 * lambda;
-			memcpy(H, U, sizeof(ScalarT) * paramDim * paramDim);
+			memcpy(H.data(), U.data(), sizeof(ScalarT) * paramDim * paramDim);
 			for(size_t i = 0; i < paramDim; ++i)
 				H[i * paramDim + i] += lambda * (ScalarT(1) + H[i * paramDim + i]);
 			// now H is positive definite and symmetric
 			// solve Hx = -v with Cholesky
-			if(!Cholesky(H, paramDim, p))
+			if(!Cholesky(H.data(), paramDim, p.data()))
 				goto cleanup;
-			CholeskySolve(H, paramDim, p, v, x);
+			CholeskySolve(H.data(), paramDim, p.data(), v.data(), x.data());
 			for(size_t i = 0; i < paramDim; ++i)
 				paramNew[i] = param[i] + x[i];
 			// get new error
 			newChi = 0;
 			for(size_t i = 0; i < size; ++i)
 			{
-				dNew[i] = (*(funcs[i]))(paramNew);
+				dNew[i] = (*(funcs[i]))(paramNew.data());
 				newChi += dNew[i] * dNew[i];
 			}
 			// check for convergence
@@ -448,15 +444,6 @@ ScalarT LevMar(unsigned int paramDim, unsigned int imgDim,
 	}
 	while(outerIter < maxOuterIter);
 cleanup:
-	delete[] F0;
-	delete[] U;
-	delete[] H ;
-	delete[] v;
-	delete[] d;
-	delete[] dNew;
-	delete[] x;
-	delete[] p;
-	delete[] paramNew;
 	return retVal;
 }
 

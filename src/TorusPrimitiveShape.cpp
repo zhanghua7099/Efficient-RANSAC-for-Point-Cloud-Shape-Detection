@@ -2,11 +2,24 @@
 #include "PrimitiveShapeVisitor.h"
 #include <MiscLib/Performance.h>
 #include <sstream>
+#include <memory>
 #include "ConePrimitiveShape.h"
 #include "CylinderPrimitiveShape.h"
 #include "SpherePrimitiveShape.h"
 #include "PlanePrimitiveShape.h"
 extern MiscLib::performance_t totalTime_torusConnected;
+
+namespace
+{
+	struct RefCountReleaseDeleter
+	{
+		void operator()(PrimitiveShape *shape) const
+		{
+			if(shape)
+				shape->Release();
+		}
+	};
+}
 
 TorusPrimitiveShape::TorusPrimitiveShape(const Torus &torus)
 : m_torus(torus)
@@ -28,7 +41,7 @@ size_t TorusPrimitiveShape::Identifier() const
 
 PrimitiveShape *TorusPrimitiveShape::Clone() const
 {
-	return new TorusPrimitiveShape(*this);
+	return std::make_unique< TorusPrimitiveShape >(*this).release();
 }
 
 float TorusPrimitiveShape::Distance(const Vec3f &p) const
@@ -108,7 +121,7 @@ PrimitiveShape *TorusPrimitiveShape::LSFit(const PointCloud &pc, float epsilon,
 	if(fit.LeastSquaresFit(pc, begin, end))
 	{
 		score->first = -1;
-		return new TorusPrimitiveShape(fit);
+		return std::make_unique< TorusPrimitiveShape >(fit).release();
 	}
 	score->first = 0;
 	return NULL;
@@ -116,7 +129,7 @@ PrimitiveShape *TorusPrimitiveShape::LSFit(const PointCloud &pc, float epsilon,
 
 LevMarFunc< float > *TorusPrimitiveShape::SignedDistanceFunc() const
 {
-	return new TorusLevMarFunc(m_torus);
+	return std::make_unique< TorusLevMarFunc >(m_torus).release();
 }
 
 void TorusPrimitiveShape::Serialize(std::ostream *o, bool binary) const
@@ -197,8 +210,11 @@ void TorusPrimitiveShape::SuggestSimplifications(const PointCloud &pc,
 			}
 		if(!failed)
 		{
-			suggestions->push_back(new ConePrimitiveShape(cone));
+			std::unique_ptr< PrimitiveShape, RefCountReleaseDeleter > suggestion(
+				new ConePrimitiveShape(cone));
+			suggestions->push_back(suggestion.get());
 			suggestions->back()->Release();
+			suggestion.release();
 		}
 	}
 	Cylinder cylinder;
@@ -214,8 +230,11 @@ void TorusPrimitiveShape::SuggestSimplifications(const PointCloud &pc,
 			}
 		if(!failed)
 		{
-			suggestions->push_back(new CylinderPrimitiveShape(cylinder));
+			std::unique_ptr< PrimitiveShape, RefCountReleaseDeleter > suggestion(
+				new CylinderPrimitiveShape(cylinder));
+			suggestions->push_back(suggestion.get());
 			suggestions->back()->Release();
+			suggestion.release();
 		}
 	}
 	Sphere sphere;
@@ -231,8 +250,11 @@ void TorusPrimitiveShape::SuggestSimplifications(const PointCloud &pc,
 			}
 		if(!failed)
 		{
-			suggestions->push_back(new SpherePrimitiveShape(sphere));
+			std::unique_ptr< PrimitiveShape, RefCountReleaseDeleter > suggestion(
+				new SpherePrimitiveShape(sphere));
+			suggestions->push_back(suggestion.get());
 			suggestions->back()->Release();
+			suggestion.release();
 		}
 	}
 	Plane plane;
@@ -247,8 +269,11 @@ void TorusPrimitiveShape::SuggestSimplifications(const PointCloud &pc,
 			}
 		if(!failed)
 		{
-			suggestions->push_back(new PlanePrimitiveShape(plane));
+			std::unique_ptr< PrimitiveShape, RefCountReleaseDeleter > suggestion(
+				new PlanePrimitiveShape(plane));
+			suggestions->push_back(suggestion.get());
 			suggestions->back()->Release();
+			suggestion.release();
 		}
 	}
 	/*// although theoretically possible, we never suggest a cone since a misclassification

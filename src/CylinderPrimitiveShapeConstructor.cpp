@@ -1,6 +1,7 @@
 #include "CylinderPrimitiveShapeConstructor.h"
 #include "ScoreComputer.h"
 #include <GfxTL/NullClass.h>
+#include <memory>
 
 size_t CylinderPrimitiveShapeConstructor::Identifier() const
 {
@@ -21,7 +22,7 @@ PrimitiveShape *CylinderPrimitiveShapeConstructor::Construct(
 	std::copy(normals.begin(), normals.end(), std::back_inserter(samples));
 	if(!cy.Init(samples))
 		return NULL;
-	return new CylinderPrimitiveShape(cy);
+	return std::make_unique< CylinderPrimitiveShape >(cy).release();
 }
 
 PrimitiveShape *CylinderPrimitiveShapeConstructor::Construct(
@@ -30,7 +31,7 @@ PrimitiveShape *CylinderPrimitiveShapeConstructor::Construct(
 	Cylinder cy;
 	if(!cy.Init(samples))
 		return NULL;
-	return new CylinderPrimitiveShape(cy);
+	return std::make_unique< CylinderPrimitiveShape >(cy).release();
 }
 
 PrimitiveShape *CylinderPrimitiveShapeConstructor::Deserialize(
@@ -38,8 +39,7 @@ PrimitiveShape *CylinderPrimitiveShapeConstructor::Deserialize(
 {
 	Cylinder cylinder;
 	cylinder.Init(binary, i);
-	CylinderPrimitiveShape *shape = new CylinderPrimitiveShape(cylinder);
-	return shape;
+	return std::make_unique< CylinderPrimitiveShape >(cylinder).release();
 }
 
 size_t CylinderPrimitiveShapeConstructor::SerializedSize() const

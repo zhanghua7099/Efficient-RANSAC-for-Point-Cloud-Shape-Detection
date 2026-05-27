@@ -1,6 +1,7 @@
 #ifndef GfxTL__BBOXBUILDINFORMATIONTREESTRATEGY_HEADER__
 #define GfxTL__BBOXBUILDINFORMATIONTREESTRATEGY_HEADER__
 #include <algorithm>
+#include <vector>
 
 namespace GfxTL
 {
@@ -35,10 +36,12 @@ namespace GfxTL
 						m_bbox[0] = m_bbox[1] = NULL;
 					}
 
-					~BuildInformation()
+					void ResizeBBox(unsigned int dim)
 					{
-						delete[] m_bbox[0];
-						delete[] m_bbox[1];
+						m_bboxStorage[0].resize(dim);
+						m_bboxStorage[1].resize(dim);
+						m_bbox[0] = m_bboxStorage[0].data();
+						m_bbox[1] = m_bboxStorage[1].data();
 					}
 
 					typename ScalarTypeDeferer< value_type >::ScalarType **
@@ -54,6 +57,10 @@ namespace GfxTL
 					}
 
 					typename ScalarTypeDeferer< value_type >::ScalarType *m_bbox[2];
+
+				private:
+					std::vector< typename ScalarTypeDeferer< value_type >::ScalarType >
+						m_bboxStorage[2];
 			};
 
 			template< class BuildInformationT >
@@ -61,10 +68,7 @@ namespace GfxTL
 			{
 				BaseType::InitRootBuildInformation(bi);
 				// init bbox
-				bi->m_bbox[0] =
-					new typename ScalarTypeDeferer< value_type >::ScalarType[BaseType::m_dim];
-				bi->m_bbox[1] =
-					new typename ScalarTypeDeferer< value_type >::ScalarType[BaseType::m_dim];
+				bi->ResizeBBox(BaseType::m_dim);
 				// init the values (box of zero volume)
 				typename BaseType::HandleType i = bi->Range().first;
 				BaseType::AssignAsAABoxMin(this->at(this->Dereference(i)), &bi->m_bbox[0]);
@@ -81,10 +85,7 @@ namespace GfxTL
 				BaseType::InitBuildInformation(parent, parentInfo, childIdx,
 					bi);
 				// init bbox
-				bi->m_bbox[0] =
-					new typename ScalarTypeDeferer< value_type >::ScalarType[BaseType::m_dim];
-				bi->m_bbox[1] =
-					new typename ScalarTypeDeferer< value_type >::ScalarType[BaseType::m_dim];
+				bi->ResizeBBox(BaseType::m_dim);
 				// init the values (box of zero volume)
 				if(!(bi->Range().second - bi->Range().first))
 				{

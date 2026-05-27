@@ -1,4 +1,6 @@
 
+#include <memory>
+
 namespace GfxTL
 {
 	//-- AAKdCell
@@ -84,12 +86,13 @@ namespace GfxTL
 	{
 		Clear();
 
-		CellType *root = new CellType;
-		RootCellData(AACube< PointType >(), root); // implemented by TreeData
-		Root(root);
+		auto root = std::make_unique< CellType >();
+		RootCellData(AACube< PointType >(), root.get()); // implemented by TreeData
+		Root(root.get());
+		CellType *rootPtr = root.release();
 
 		std::list< CellType * > stack;
-		stack.push_back(root);
+		stack.push_back(rootPtr);
 		while(stack.size())
 		{
 			CellType *c = stack.back();
@@ -146,8 +149,9 @@ namespace GfxTL
 		CellType *c = Root();
 		if(!c)
 		{
-			c = new CellType;
-			Root(c);
+			auto root = std::make_unique< CellType >();
+			Root(root.get());
+			c = root.release();
 		}
 		RootCellData(AACube< PointType >(), c);
 		std::list< CellType * > stack;
@@ -456,21 +460,18 @@ namespace GfxTL
 
 		ScalarType split = (pmax[axis] + pmin[axis]) / 2;
 
-		CellType *left, *right;
-		left = new CellType;
-		right = new CellType;
-		SplitAlongAxis(*cell, axis, split, left, right); // implemented by TreeData
+		auto left = std::make_unique< CellType >();
+		auto right = std::make_unique< CellType >();
+		SplitAlongAxis(*cell, axis, split, left.get(), right.get()); // implemented by TreeData
 
 		if(left->Size() == cell->Size() || right->Size() == cell->Size())
 		{
-			delete left;
-			delete right;
 			return;
 		}
 		cell->Split(split);
 		cell->Axis(axis);
-		cell->Child(0, left);
-		cell->Child(1, right);
+		cell->Child(0, left.release());
+		cell->Child(1, right.release());
 	}
 
 	template< class Strategies >

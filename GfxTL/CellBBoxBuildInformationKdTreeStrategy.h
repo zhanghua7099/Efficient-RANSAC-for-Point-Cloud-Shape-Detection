@@ -1,5 +1,6 @@
 #ifndef GfxTL__CELLBBOXBUILDINFORMATIONKDTREESTRATEGY_HEADER__
 #define GfxTL__CELLBBOXBUILDINFORMATIONKDTREESTRATEGY_HEADER__
+#include <vector>
 
 namespace GfxTL
 {
@@ -32,10 +33,7 @@ namespace GfxTL
 			}
 
 			~StrategyBase()
-			{
-				delete [] m_bbox[0];
-				delete [] m_bbox[1];
-			}
+			{}
 
 			const ScalarType * const *RootCellBBox() const { return m_bbox; }
 
@@ -65,11 +63,11 @@ namespace GfxTL
 			void InitRootBuildInformation(BuildInformationT *bi)
 			{
 				BaseType::InitRootBuildInformation(bi);
-				delete [] m_bbox[0]; // delete because dimension could have changed
-				delete [] m_bbox[1];
 				// init bbox
-				m_bbox[0] = new ScalarType[BaseType::m_dim];
-				m_bbox[1] = new ScalarType[BaseType::m_dim];
+				m_bboxStorage[0].resize(BaseType::m_dim);
+				m_bboxStorage[1].resize(BaseType::m_dim);
+				m_bbox[0] = m_bboxStorage[0].data();
+				m_bbox[1] = m_bboxStorage[1].data();
 				// init the values (box of zero volume)
 				typename BaseType::HandleType i = bi->Range().first;
 				this->AssignAsAABoxMin(this->at(this->Dereference(i)), &m_bbox[0]);
@@ -117,6 +115,7 @@ namespace GfxTL
 			}
 
 		private:
+			std::vector< ScalarType > m_bboxStorage[2];
 			ScalarType *m_bbox[2];
 		};
 	};

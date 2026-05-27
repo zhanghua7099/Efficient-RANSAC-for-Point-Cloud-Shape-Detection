@@ -2,6 +2,7 @@
 #include "SpherePrimitiveShape.h"
 #include "ScoreComputer.h"
 #include <GfxTL/NullClass.h>
+#include <memory>
 
 SpherePrimitiveShapeConstructor::SpherePrimitiveShapeConstructor(
 	float maxSphereRadius)
@@ -28,7 +29,7 @@ PrimitiveShape *SpherePrimitiveShapeConstructor::Construct(
 		return NULL;
 	if(sphere.Radius() > m_maxSphereRadius)
 		return NULL;
-	return new SpherePrimitiveShape(sphere);
+	return std::make_unique< SpherePrimitiveShape >(sphere).release();
 }
 
 PrimitiveShape *SpherePrimitiveShapeConstructor::Construct(
@@ -37,15 +38,15 @@ PrimitiveShape *SpherePrimitiveShapeConstructor::Construct(
 	Sphere sphere;
 	if(!sphere.Init(samples))
 		return NULL;
-	return new SpherePrimitiveShape(sphere);
+	return std::make_unique< SpherePrimitiveShape >(sphere).release();
 }
 
 PrimitiveShape *SpherePrimitiveShapeConstructor::Deserialize(std::istream *i,
 	bool binary) const
 {
-	SpherePrimitiveShape *shape = new SpherePrimitiveShape();
+	auto shape = std::make_unique< SpherePrimitiveShape >();
 	shape->Deserialize(i, binary);
-	return shape;
+	return shape.release();
 }
 
 size_t SpherePrimitiveShapeConstructor::SerializedSize() const

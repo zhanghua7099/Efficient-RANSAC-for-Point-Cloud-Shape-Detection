@@ -241,13 +241,15 @@ namespace GfxTL
 				BaseType::Clear();
 				if(!BaseType::size())
 					return;
-				BaseType::Root() = new CellType;
+				auto root = std::make_unique< CellType >();
+				BaseType::Root() = root.get();
 				std::deque< Pair > stack(1);
 				// init build information directly on stack to avoid
 				// copying.
 				stack.back().first = BaseType::Root();
 				InitRootBuildInformation(&stack.back().second);
 				BaseType::InitRoot(stack.back().second, BaseType::Root());
+				root.release();
 				while(stack.size())
 				{
 					Pair &p = stack.back();
@@ -549,21 +551,18 @@ namespace GfxTL
 			void Subdivide(BuildInformation &bi, CellType *cell)
 			{
 				BaseType::ComputeSplit(bi, cell);
-				CellType *left, *right;
-				left = new CellType;
-				right = new CellType;
+				auto left = std::make_unique< CellType >();
+				auto right = std::make_unique< CellType >();
 //				unsigned int splitIter = 1;
 //splitAgain:	
-				BaseType::SplitData(*cell, *cell, bi, left, right);
+				BaseType::SplitData(*cell, *cell, bi, left.get(), right.get());
 				if(left->Size() == cell->Size())
 				{
-					delete right;
-					right = NULL;
+					right.reset();
 				}
 				else if(right->Size() == cell->Size())
 				{
-					delete left;
-					left = NULL;
+					left.reset();
 				}
 				//if(left->Size() == cell->Size() || right->Size() == cell->Size())
 				//{
@@ -582,8 +581,8 @@ namespace GfxTL
 				//	delete right;
 				//	left = right = NULL;
 				//}
-				cell->Child(0, left);
-				cell->Child(1, right);
+				cell->Child(0, left.release());
+				cell->Child(1, right.release());
 				if(BaseType::IsLeaf(*cell))
 					cell->Child(0, BaseType::InnerNodeMarker());
 			}

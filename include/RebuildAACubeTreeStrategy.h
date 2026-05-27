@@ -37,7 +37,10 @@ struct RebuildAACubeTreeStrategy
 				for(unsigned int i = 0; i < CellType::NChildren; ++i)
 				{
 					if(this->ExistChild(*BaseType::Root(), i))
-						delete &((*BaseType::Root())[i]);
+					{
+						CellType *child = BaseType::Root()->Child(i);
+						delete child;
+					}
 					BaseType::Root()->Child(i, NULL);
 				}
 			}
@@ -140,7 +143,8 @@ struct RebuildAACubeTreeStrategy
 						maxDepth = d;
 					if(cell[i].Size() == 0)
 					{
-						delete &(cell[i]);
+						CellType *child = cell.Child(i);
+						delete child;
 						cell.Child(i, (CellType *)1);
 					}
 					else
@@ -159,7 +163,8 @@ struct RebuildAACubeTreeStrategy
 					{
 						if(!this->ExistChild(cell, i))
 							continue;
-						delete &(cell[i]);
+						CellType *child = cell.Child(i);
+						delete child;
 						cell.Child(i, NULL);
 					}
 					cell.Child(0, NULL);

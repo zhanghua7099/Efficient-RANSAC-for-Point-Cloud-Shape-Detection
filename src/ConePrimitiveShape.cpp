@@ -7,6 +7,7 @@
 #include <limits>
 #include <algorithm>
 #include <iostream>
+#include <memory>
 #include <MiscLib/Performance.h>
 #include "TorusPrimitiveShape.h"
 #include "CylinderPrimitiveShape.h"
@@ -16,6 +17,18 @@
 extern MiscLib::performance_t totalTime_coneConnected;
 #undef max
 #undef min
+
+namespace
+{
+	struct RefCountReleaseDeleter
+	{
+		void operator()(PrimitiveShape *shape) const
+		{
+			if(shape)
+				shape->Release();
+		}
+	};
+}
 
 ConePrimitiveShape::ConePrimitiveShape(const Cone &cone)
 : m_cone(cone)
@@ -28,7 +41,7 @@ size_t ConePrimitiveShape::Identifier() const
 
 PrimitiveShape *ConePrimitiveShape::Clone() const
 {
-	return new ConePrimitiveShape(*this);
+	return std::make_unique< ConePrimitiveShape >(*this).release();
 }
 
 float ConePrimitiveShape::Distance(const Vec3f &p) const
@@ -102,7 +115,7 @@ PrimitiveShape *ConePrimitiveShape::LSFit(const PointCloud &pc, float epsilon,
 	if(fit.LeastSquaresFit(pc, begin, end))
 	{
 		score->first = -1;
-		return new ConePrimitiveShape(fit);
+		return std::make_unique< ConePrimitiveShape >(fit).release();
 	}
 	score->first = 0;
 	return NULL;
@@ -110,7 +123,7 @@ PrimitiveShape *ConePrimitiveShape::LSFit(const PointCloud &pc, float epsilon,
 
 LevMarFunc< float > *ConePrimitiveShape::SignedDistanceFunc() const
 {
-	return new ConeLevMarFunc(m_cone);
+	return std::make_unique< ConeLevMarFunc >(m_cone).release();
 }
 
 void ConePrimitiveShape::Serialize(std::ostream *o, bool binary) const
@@ -235,8 +248,11 @@ void ConePrimitiveShape::SuggestSimplifications(const PointCloud &pc,
 			}
 		if(!failed)
 		{
-			suggestions->push_back(new CylinderPrimitiveShape(cylinder));
+			std::unique_ptr< PrimitiveShape, RefCountReleaseDeleter > suggestion(
+				new CylinderPrimitiveShape(cylinder));
+			suggestions->push_back(suggestion.get());
 			suggestions->back()->Release();
+			suggestion.release();
 		}
 	}
 	Sphere sphere;
@@ -252,8 +268,11 @@ void ConePrimitiveShape::SuggestSimplifications(const PointCloud &pc,
 			}
 		if(!failed)
 		{
-			suggestions->push_back(new SpherePrimitiveShape(sphere));
+			std::unique_ptr< PrimitiveShape, RefCountReleaseDeleter > suggestion(
+				new SpherePrimitiveShape(sphere));
+			suggestions->push_back(suggestion.get());
 			suggestions->back()->Release();
+			suggestion.release();
 		}
 	}
 	Plane plane;
@@ -268,8 +287,11 @@ void ConePrimitiveShape::SuggestSimplifications(const PointCloud &pc,
 			}
 		if(!failed)
 		{
-			suggestions->push_back(new PlanePrimitiveShape(plane));
+			std::unique_ptr< PrimitiveShape, RefCountReleaseDeleter > suggestion(
+				new PlanePrimitiveShape(plane));
+			suggestions->push_back(suggestion.get());
 			suggestions->back()->Release();
+			suggestion.release();
 		}
 	}
 

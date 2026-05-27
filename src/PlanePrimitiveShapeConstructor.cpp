@@ -2,6 +2,7 @@
 #include "PlanePrimitiveShape.h"
 #include "ScoreComputer.h"
 #include <GfxTL/NullClass.h>
+#include <memory>
 
 size_t PlanePrimitiveShapeConstructor::Identifier() const
 {
@@ -16,7 +17,7 @@ unsigned int PlanePrimitiveShapeConstructor::RequiredSamples() const
 PrimitiveShape *PlanePrimitiveShapeConstructor::Construct(
 	const MiscLib::Vector< Vec3f > &points, const MiscLib::Vector< Vec3f > &) const
 {
-	return new PlanePrimitiveShape(points[0], points[1], points[2]);
+	return std::make_unique< PlanePrimitiveShape >(points[0], points[1], points[2]).release();
 }
 
 PrimitiveShape *PlanePrimitiveShapeConstructor::Construct(
@@ -25,7 +26,7 @@ PrimitiveShape *PlanePrimitiveShapeConstructor::Construct(
 	Plane plane;
 	if(!plane.Init(samples))
 		return NULL;
-	return new PlanePrimitiveShape(plane);
+	return std::make_unique< PlanePrimitiveShape >(plane).release();
 }
 
 PrimitiveShape *PlanePrimitiveShapeConstructor::Deserialize(std::istream *i,
@@ -33,8 +34,7 @@ PrimitiveShape *PlanePrimitiveShapeConstructor::Deserialize(std::istream *i,
 {
 	Plane plane;
 	plane.Init(binary, i);
-	PlanePrimitiveShape *shape = new PlanePrimitiveShape(plane);
-	return shape;
+	return std::make_unique< PlanePrimitiveShape >(plane).release();
 }
 
 size_t PlanePrimitiveShapeConstructor::SerializedSize() const

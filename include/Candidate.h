@@ -113,13 +113,35 @@ bool Candidate::operator>=(const Candidate &c) const
 
 void Candidate::Clone(Candidate *c) const
 {
-	c->m_shape = m_shape->Clone();
+	struct ShapeReleaseDeleter
+	{
+		void operator()(PrimitiveShape *shape) const
+		{
+			if(shape)
+				shape->Release();
+		}
+	};
+	std::unique_ptr< PrimitiveShape, ShapeReleaseDeleter > shape(m_shape->Clone());
+	c->m_shape = shape.get();
 	c->m_shape->Release();
+	shape.release();
 	c->m_subset = m_subset;
 	c->m_lowerBound = m_lowerBound;
 	c->m_upperBound = m_upperBound;
-	c->m_indices = new MiscLib::RefCounted< MiscLib::Vector< size_t > >(*m_indices);
+	struct IndicesReleaseDeleter
+	{
+		void operator()(MiscLib::RefCounted< MiscLib::Vector< size_t > > *indices) const
+		{
+			if(indices)
+				indices->Release();
+		}
+	};
+	std::unique_ptr< MiscLib::RefCounted< MiscLib::Vector< size_t > >,
+		IndicesReleaseDeleter > indices(
+			new MiscLib::RefCounted< MiscLib::Vector< size_t > >(*m_indices));
+	c->m_indices = indices.get();
 	c->m_indices->Release();
+	indices.release();
 	c->m_level = m_level;;
 	c->m_hasConnectedComponent = m_hasConnectedComponent;
 	c->m_score = m_score;

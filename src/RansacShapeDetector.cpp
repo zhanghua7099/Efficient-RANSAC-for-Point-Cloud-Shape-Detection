@@ -171,8 +171,19 @@ void RansacShapeDetector::GenerateCandidates(
 			if(!verified)
 				continue;
 			Candidate cand(shape.get(), node->Level());
-			cand.Indices(new MiscLib::RefCounted< MiscLib::Vector< size_t > >);
+			struct IndicesRelease
+			{
+				void operator()(MiscLib::RefCounted< MiscLib::Vector< size_t > > *indices) const
+				{
+					if(indices)
+						indices->Release();
+				}
+			};
+			std::unique_ptr< MiscLib::RefCounted< MiscLib::Vector< size_t > >,
+				IndicesRelease > indices(new MiscLib::RefCounted< MiscLib::Vector< size_t > >);
+			cand.Indices(indices.get());
 			cand.Indices()->Release();
+			indices.release();
 			cand.ImproveBounds(octrees, pc, scoreVisitorCopy,
 				currentSize, m_options.m_bitmapEpsilon, 1);
 			if(cand.UpperBound() < m_options.m_minSupport)

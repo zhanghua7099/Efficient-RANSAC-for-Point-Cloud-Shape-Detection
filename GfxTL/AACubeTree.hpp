@@ -1,3 +1,5 @@
+#include <memory>
+
 namespace GfxTL
 {
 
@@ -204,11 +206,12 @@ namespace GfxTL
 		std::queue< CellType * > *qq;
 		std::queue< CellType * > q1, q2, level;
 
-		CellType *c = new CellType(NULL, bc);
-		RootCellData(bc, c); // implemented by TreeData
-		q1.push(c);
-		Root(c); // implemented by BaseTree
-		InitCellData(c); // implemented by Strategies
+		auto root = std::make_unique< CellType >(NULL, bc);
+		RootCellData(bc, root.get()); // implemented by TreeData
+		q1.push(root.get());
+		Root(root.get()); // implemented by BaseTree
+		InitCellData(root.get()); // implemented by Strategies
+		CellType *c = root.release();
 		q = &q1;
 		qq = &q2;
 
@@ -300,11 +303,11 @@ namespace GfxTL
 	{
 		if(axis == Dim)
 		{
-			CellType *child = new CellType;
+			auto child = std::make_unique< CellType >();
 			child->Data(*data);
 			child->Parent(cell);
 			child->Cube() = CubeType(box, cell->Cube());
-			cell->Child(box, child);
+			cell->Child(box, child.release());
 		}
 		else
 		{

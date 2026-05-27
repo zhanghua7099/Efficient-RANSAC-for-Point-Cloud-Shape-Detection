@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <memory>
 #include <MiscLib/Performance.h>
 extern MiscLib::performance_t totalTime_planeConnected;
 
@@ -30,7 +31,7 @@ size_t PlanePrimitiveShape::Identifier() const
 
 PrimitiveShape *PlanePrimitiveShape::Clone() const
 {
-	return new PlanePrimitiveShape(*this);
+	return std::make_unique< PlanePrimitiveShape >(*this).release();
 }
 
 float PlanePrimitiveShape::Distance(const Vec3f &p) const
@@ -104,7 +105,7 @@ PrimitiveShape *PlanePrimitiveShape::LSFit(const PointCloud &pc, float epsilon,
 	if(fit.LeastSquaresFit(pc, begin, end))
 	{
 		score->first = -1;
-		return new PlanePrimitiveShape(fit);
+		return std::make_unique< PlanePrimitiveShape >(fit).release();
 	}
 	score->first = 0;
 	return NULL;
@@ -158,7 +159,7 @@ bool PlanePrimitiveShape::Similar(float, const PlanePrimitiveShape &) const
 
 LevMarFunc< float > *PlanePrimitiveShape::SignedDistanceFunc() const
 {
-	return new PlaneLevMarFunc(m_plane);
+	return std::make_unique< PlaneLevMarFunc >(m_plane).release();
 }
 
 void PlanePrimitiveShape::Parameters(const Vec3f &p,

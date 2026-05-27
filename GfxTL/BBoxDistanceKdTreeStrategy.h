@@ -1,5 +1,6 @@
 #ifndef GfxTL__BBOXDISTANCEKDTREESTRATEGY_HEADER__
 #define GfxTL__BBOXDISTANCEKDTREESTRATEGY_HEADER__
+#include <vector>
 
 namespace GfxTL
 {
@@ -22,10 +23,12 @@ namespace GfxTL
 					m_bbox[0] = m_bbox[1] = NULL;
 				}
 
-				~CellData()
+				void ResizeBBox(unsigned int dim)
 				{
-					delete[] m_bbox[0];
-					delete[] m_bbox[1];
+					m_bboxStorage[0].resize(dim);
+					m_bboxStorage[1].resize(dim);
+					m_bbox[0] = m_bboxStorage[0].data();
+					m_bbox[1] = m_bboxStorage[1].data();
 				}
 
 				ScalarType **BBox()
@@ -39,6 +42,7 @@ namespace GfxTL
 				}
 
 			private:
+				std::vector< ScalarType > m_bboxStorage[2];
 				ScalarType *m_bbox[2];
 		};
 
@@ -67,8 +71,7 @@ namespace GfxTL
 				void InitRoot(const BuildInformationT &bi, CellType *cell)
 				{
 					BaseType::InitRoot(bi, cell);
-					cell->BBox()[0] = new ScalarType[BaseType::m_dim];
-					cell->BBox()[1] = new ScalarType[BaseType::m_dim];
+					cell->ResizeBBox(BaseType::m_dim);
 					BaseType::AssignVector(bi.BBox()[0], &cell->BBox()[0]);
 					BaseType::AssignVector(bi.BBox()[1], &cell->BBox()[1]);
 				}
@@ -79,8 +82,7 @@ namespace GfxTL
 					const BuildInformationT &bi, CellType *cell)
 				{
 					BaseType::InitCell(parent, parentInfo, childIdx, bi, cell);
-					cell->BBox()[0] = new ScalarType[BaseType::m_dim];
-					cell->BBox()[1] = new ScalarType[BaseType::m_dim];
+					cell->ResizeBBox(BaseType::m_dim);
 					BaseType::AssignVector(bi.BBox()[0], &cell->BBox()[0]);
 					BaseType::AssignVector(bi.BBox()[1], &cell->BBox()[1]);
 				}

@@ -24,9 +24,22 @@
 #include <GfxTL/Covariance.h>
 #include <GfxTL/IndexedIterator.h>
 #include <GfxTL/Jacobi.h>
+#include <memory>
 #include <MiscLib/Performance.h>
 #include "PlanePrimitiveShape.h"
 extern MiscLib::performance_t totalTime_sphereConnected;
+
+namespace
+{
+	struct RefCountReleaseDeleter
+	{
+		void operator()(PrimitiveShape *shape) const
+		{
+			if(shape)
+				shape->Release();
+		}
+	};
+}
 
 SpherePrimitiveShape::SpherePrimitiveShape(const Sphere &s)
 : m_sphere(s)
@@ -165,7 +178,7 @@ bool SpherePrimitiveShape::Init(bool binary, std::istream *i)
 
 PrimitiveShape *SpherePrimitiveShape::Clone() const
 {
-	return new SpherePrimitiveShape(*this);
+	return std::make_unique<SpherePrimitiveShape>(*this).release();
 }
 
 float SpherePrimitiveShape::Distance(const Vec3f &p) const
@@ -242,7 +255,7 @@ PrimitiveShape *SpherePrimitiveShape::LSFit(const PointCloud &pc, float epsilon,
 	if(fit.LeastSquaresFit(pc, begin, end))
 	{
 		score->first = -1;
-		return new SpherePrimitiveShape(fit);
+		return std::make_unique<SpherePrimitiveShape>(fit).release();
 	}
 	score->first = 0;
 	return NULL;
@@ -278,7 +291,7 @@ size_t SpherePrimitiveShape::SerializedSize() const
 
 LevMarFunc< float > *SpherePrimitiveShape::SignedDistanceFunc() const
 {
-	return new SphereLevMarFunc(m_sphere);
+	return std::make_unique<SphereLevMarFunc>(m_sphere).release();
 }
 
 void SpherePrimitiveShape::Transform(float scale, const Vec3f &translate)
@@ -325,8 +338,11 @@ void SpherePrimitiveShape::SuggestSimplifications(const PointCloud &pc,
 			}
 		if(!failed)
 		{
-			suggestions->push_back(new PlanePrimitiveShape(plane));
+			std::unique_ptr< PrimitiveShape, RefCountReleaseDeleter > suggestion(
+				new PlanePrimitiveShape(plane));
+			suggestions->push_back(suggestion.get());
 			suggestions->back()->Release();
+			suggestion.release();
 		}
 	}
 

@@ -2,6 +2,7 @@
 #define GfxTL__SLIDINGMIDPOINTSPLITTINGKDTREESTRATEGY_HEADER__
 #include <GfxTL/ScalarTypeDeferer.h>
 #include <GfxTL/ScalarTypeConversion.h>
+#include <vector>
 
 namespace GfxTL
 {
@@ -31,9 +32,11 @@ namespace GfxTL
 			template< class BuildInformationT >
 			void ComputeSplit(const BuildInformationT &bi, CellType *cell)
 			{
-				DiffScalarType *cellDiff = new DiffScalarType[BaseType::m_dim];
+				std::vector< DiffScalarType > cellDiffStorage(BaseType::m_dim);
+				DiffScalarType *cellDiff = cellDiffStorage.data();
 				Sub(bi.CellBBox()[1], bi.CellBBox()[0], &cellDiff);
-				DiffScalarType *diff = new DiffScalarType[BaseType::m_dim];
+				std::vector< DiffScalarType > diffStorage(BaseType::m_dim);
+				DiffScalarType *diff = diffStorage.data();
 				Sub(bi.BBox()[1], bi.BBox()[0], &diff);
 				unsigned int axis = 0;
 				DiffScalarType length = cellDiff[0];
@@ -55,17 +58,17 @@ namespace GfxTL
 				if(cell->SplitValue() < bi.BBox()[0][axis]
 					|| cell->SplitValue() > bi.BBox()[1][axis])
 					cell->SplitValue() = (bi.BBox()[1][axis] + bi.BBox()[0][axis]) / 2;
-				delete[] cellDiff;
-				delete[] diff;
 			}
 
 			template< class BuildInformationT >
 			void ComputeSplit(unsigned int axis, const BuildInformationT &bi,
 				CellType *cell)
 			{
-				DiffScalarType *cellDiff = new DiffScalarType[BaseType::m_dim];
+				std::vector< DiffScalarType > cellDiffStorage(BaseType::m_dim);
+				DiffScalarType *cellDiff = cellDiffStorage.data();
 				Sub(bi.CellBBox()[1], bi.CellBBox()[0], &cellDiff);
-				DiffScalarType *diff = new DiffScalarType[BaseType::m_dim];
+				std::vector< DiffScalarType > diffStorage(BaseType::m_dim);
+				DiffScalarType *diff = diffStorage.data();
 				Sub(bi.BBox()[1], bi.BBox()[0], &diff);
 				cell->SplitAxis() = axis;
 				cell->SplitValue() =
@@ -74,8 +77,6 @@ namespace GfxTL
 					cell->SplitValue() = bi.BBox()[0][axis];
 				else if(cell->SplitValue() > bi.BBox()[1][axis])
 					cell->SplitValue() = bi.BBox()[1][axis];
-				delete[] cellDiff;
-				delete[] diff;
 			}
 
 			template< class BuildInformationT >

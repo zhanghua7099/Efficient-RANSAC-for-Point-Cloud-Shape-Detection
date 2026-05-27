@@ -1,4 +1,6 @@
 
+#include <memory>
+
 namespace GfxTL
 {
 	template< class ValueT, class BaseT >
@@ -72,16 +74,17 @@ namespace GfxTL
 	{
 		Clear();
 
-		CellType *root = new CellType;
+		auto root = std::make_unique< CellType >();
 		CellRange range;
 		RootRange(&range);
 		root->_box.Infinite();
-		Root(root);
-		Init(range, NULL, root);
+		Root(root.get());
+		Init(range, NULL, root.get());
+		CellType *rootPtr = root.release();
 
 		typedef std::pair< CellType *, CellRange > Pair;
 		std::deque< Pair > stack;
-		stack.push_back(Pair(root, range));
+		stack.push_back(Pair(rootPtr, range));
 		while(stack.size())
 		{
 			Pair p = stack.back();
@@ -109,9 +112,10 @@ namespace GfxTL
 		RootRange(&range);
 		if(!cell)
 		{
-			cell = new CellType;
-			Root(cell);
-			Init(range, NULL, cell);
+			auto newCell = std::make_unique< CellType >();
+			Root(newCell.get());
+			Init(range, NULL, newCell.get());
+			cell = newCell.release();
 		}
 		Insert(cell, range, s);
 	}
@@ -239,25 +243,22 @@ namespace GfxTL
 
 		cell->_split.Set(axis, split);
 
-		CellType *left, *right;
-		left = new CellType;
-		right = new CellType;
-		Split(cell->_split, range, left, right);
+		auto left = std::make_unique< CellType >();
+		auto right = std::make_unique< CellType >();
+		Split(cell->_split, range, left.get(), right.get());
 		if(left->Size() == cell->Size() || right->Size() == cell->Size())
 		{
-			delete left;
-			delete right;
 			return;
 		}
 		//cell->_box.Split(cell->_split.Axis(), cell->_split.Value(),
 		//	&left->_box, &right->_box);
-		cell->Child(0, left);
-		cell->Child(1, right);
+		cell->Child(0, left.release());
+		cell->Child(1, right.release());
 		CellRange childRange;
 		Range(*cell, range, 0, &childRange); 
-		Init(childRange, cell, left);
+		Init(childRange, cell, (*cell)[0]);
 		Range(*cell, range, 1, &childRange);
-		Init(childRange, cell, right);
+		Init(childRange, cell, (*cell)[1]);
 		// refine split value
 		cell->_split.Value((right->Box().Min()[cell->_split.Axis()]
 			+ left->Box().Max()[cell->_split.Axis()]) / 2);

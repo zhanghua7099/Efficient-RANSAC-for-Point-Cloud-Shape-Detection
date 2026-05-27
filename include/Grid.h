@@ -3,9 +3,11 @@
 
 #ifndef WIN32
 #include <unordered_map>
+#include <memory>
 #define stdext __gnu_cxx
 #else
 #include <unordered_map>
+#include <memory>
 #ifndef _MSC_VER
 #define stdext __gnu_cxx
 #endif
@@ -23,18 +25,18 @@ public:
 	: m_array(array)
 	{}
 
-	~ArrayGridKernel()
+	std::unique_ptr< ArrayGridKernel< CellT, DimT - 1 >[] > &Data()
 	{
-		delete[] m_array;
+		return m_array;
 	}
 
-	ArrayGridKernel< CellT, DimT - 1 > *&Data()
+	const std::unique_ptr< ArrayGridKernel< CellT, DimT - 1 >[] > &Data() const
 	{
 		return m_array;
 	}
 
 protected:
-	ArrayGridKernel< CellT, DimT - 1 > *m_array;
+	std::unique_ptr< ArrayGridKernel< CellT, DimT - 1 >[] > m_array;
 };
 
 
@@ -67,7 +69,7 @@ class ArrayGridAccessor
 {
 public:
 	ArrayGridAccessor(unsigned int *extent,
-		ArrayGridKernel< CellT, DimT - 1 > *&array)
+		std::unique_ptr< ArrayGridKernel< CellT, DimT - 1 >[] > &array)
 	: m_extent(extent)
 	, m_array(array)
 	{}
@@ -75,14 +77,14 @@ public:
 	ArrayGridAccessor< CellT, DimT - 1 > operator[](unsigned int i)
 	{
 		if(!m_array)
-			m_array = new ArrayGridKernel< CellT, DimT - 1 >[*m_extent];
+			m_array.reset(new ArrayGridKernel< CellT, DimT - 1 >[*m_extent]);
 		return ArrayGridAccessor< CellT, DimT - 1 >(m_extent + 1,
 			m_array[i].Data());
 	}
 
 private:
 	unsigned int *m_extent;
-	ArrayGridKernel< CellT, DimT - 1 > *&m_array;
+	std::unique_ptr< ArrayGridKernel< CellT, DimT - 1 >[] > &m_array;
 };
 
 
@@ -119,7 +121,7 @@ public:
 	const ConstArrayGridAccessor< CellT, DimT - 1 > operator[](
 		unsigned int i) const
 	{
-		return ConstArrayGridAccessor< CellT, DimT - 1 >(m_array[i].Data());
+		return ConstArrayGridAccessor< CellT, DimT - 1 >(m_array[i].Data().get());
 	}
 
 private:
@@ -170,8 +172,7 @@ public:
 
 	void Clear()
 	{
-		delete[] this->m_array;
-		this->m_array = NULL;
+		this->m_array.reset();
 	}
 
 	void Extent(const unsigned int *extent)
@@ -189,7 +190,7 @@ public:
 	const ConstArrayGridAccessor< CellT, DimT - 1 > operator[](
 		unsigned int i) const
 	{
-		return ConstArrayGridAccessor< CellT, DimT >(this->m_array)[i];
+		return ConstArrayGridAccessor< CellT, DimT >(this->m_array.get())[i];
 	}
 
 private:

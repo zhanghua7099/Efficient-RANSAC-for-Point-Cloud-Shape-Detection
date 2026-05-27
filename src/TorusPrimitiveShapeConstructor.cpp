@@ -2,6 +2,7 @@
 #include "TorusPrimitiveShape.h"
 #include "ScoreComputer.h"
 #include <GfxTL/NullClass.h>
+#include <memory>
 
 size_t TorusPrimitiveShapeConstructor::Identifier() const
 {
@@ -31,15 +32,15 @@ PrimitiveShape *TorusPrimitiveShapeConstructor::Construct(
 	Torus torus;
 	if(!torus.Init(samples))
 		return NULL;
-	return new TorusPrimitiveShape(torus);
+	return std::make_unique< TorusPrimitiveShape >(torus).release();
 }
 
 PrimitiveShape *TorusPrimitiveShapeConstructor::Deserialize(std::istream *i,
 	bool binary) const
 {
-	TorusPrimitiveShape *shape = new TorusPrimitiveShape();
+	auto shape = std::make_unique< TorusPrimitiveShape >();
 	shape->Deserialize(i, binary);
-	return shape;
+	return shape.release();
 }
 
 size_t TorusPrimitiveShapeConstructor::SerializedSize() const

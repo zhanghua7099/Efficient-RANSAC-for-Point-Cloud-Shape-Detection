@@ -3,6 +3,7 @@
 #include "Cone.h"
 #include "ScoreComputer.h"
 #include <GfxTL/NullClass.h>
+#include <memory>
 
 size_t ConePrimitiveShapeConstructor::Identifier() const
 {
@@ -25,7 +26,7 @@ PrimitiveShape *ConePrimitiveShapeConstructor::Construct(
 	if(cone.Angle() > 1.4835298641951801403851371532153)
 		// do not allow cones with an opening angle of more than 85 degrees
 		return NULL;
-	return new ConePrimitiveShape(cone);
+	return std::make_unique< ConePrimitiveShape >(cone).release();
 }
 
 PrimitiveShape *ConePrimitiveShapeConstructor::Construct(
@@ -34,7 +35,7 @@ PrimitiveShape *ConePrimitiveShapeConstructor::Construct(
 	Cone cone;
 	if(!cone.Init(samples))
 		return NULL;
-	return new ConePrimitiveShape(cone);
+	return std::make_unique< ConePrimitiveShape >(cone).release();
 }
 
 PrimitiveShape *ConePrimitiveShapeConstructor::Deserialize(std::istream *i,
@@ -42,8 +43,7 @@ PrimitiveShape *ConePrimitiveShapeConstructor::Deserialize(std::istream *i,
 {
 	Cone cone;
 	cone.Init(binary, i);
-	ConePrimitiveShape *shape = new ConePrimitiveShape(cone);
-	return shape;
+	return std::make_unique< ConePrimitiveShape >(cone).release();
 }
 
 size_t ConePrimitiveShapeConstructor::SerializedSize() const

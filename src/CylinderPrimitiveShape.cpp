@@ -9,12 +9,25 @@
 #include <GfxTL/NullClass.h>
 #include <iostream>
 #include <algorithm>
+#include <memory>
 #include <MiscLib/Performance.h>
 #include "TorusPrimitiveShape.h"
 #include "ConePrimitiveShape.h"
 #include "SpherePrimitiveShape.h"
 #include "PlanePrimitiveShape.h"
 extern MiscLib::performance_t totalTime_cylinderConnected;
+
+namespace
+{
+	struct RefCountReleaseDeleter
+	{
+		void operator()(PrimitiveShape *shape) const
+		{
+			if(shape)
+				shape->Release();
+		}
+	};
+}
 
 CylinderPrimitiveShape::CylinderPrimitiveShape()
 : m_clip(false)
@@ -36,7 +49,7 @@ size_t CylinderPrimitiveShape::Identifier() const
 
 PrimitiveShape *CylinderPrimitiveShape::Clone() const
 {
-	return new CylinderPrimitiveShape(*this);
+	return std::make_unique< CylinderPrimitiveShape >(*this).release();
 }
 
 bool CylinderPrimitiveShape::Init(const Vec3f &pointA, const Vec3f &pointB,
@@ -118,7 +131,7 @@ PrimitiveShape *CylinderPrimitiveShape::LSFit(const PointCloud &pc,
 	if(fit.LeastSquaresFit(pc, begin, end))
 	{
 		score->first = -1;
-		return new CylinderPrimitiveShape(fit);
+		return std::make_unique< CylinderPrimitiveShape >(fit).release();
 	}
 	score->first = 0;
 	return NULL;
@@ -126,7 +139,7 @@ PrimitiveShape *CylinderPrimitiveShape::LSFit(const PointCloud &pc,
 
 LevMarFunc< float > *CylinderPrimitiveShape::SignedDistanceFunc() const
 {
-	return new CylinderLevMarFunc(m_cylinder);
+	return std::make_unique< CylinderLevMarFunc >(m_cylinder).release();
 }
 
 void CylinderPrimitiveShape::Serialize(std::ostream *o, bool binary) const
@@ -198,8 +211,11 @@ void CylinderPrimitiveShape::SuggestSimplifications(const PointCloud &pc,
 			}
 		if(!failed)
 		{
-			suggestions->push_back(new SpherePrimitiveShape(sphere));
+			std::unique_ptr< PrimitiveShape, RefCountReleaseDeleter > suggestion(
+				new SpherePrimitiveShape(sphere));
+			suggestions->push_back(suggestion.get());
 			suggestions->back()->Release();
+			suggestion.release();
 		}
 	}
 	Plane plane;
@@ -214,8 +230,11 @@ void CylinderPrimitiveShape::SuggestSimplifications(const PointCloud &pc,
 			}
 		if(!failed)
 		{
-			suggestions->push_back(new PlanePrimitiveShape(plane));
+			std::unique_ptr< PrimitiveShape, RefCountReleaseDeleter > suggestion(
+				new PlanePrimitiveShape(plane));
+			suggestions->push_back(suggestion.get());
 			suggestions->back()->Release();
+			suggestion.release();
 		}
 	}
 	/*// We suggest a sphere if a curvature of radius along the height

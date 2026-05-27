@@ -1,5 +1,7 @@
 #ifndef GfxTL__CELLRANGEDATATREESTRATEGY_HEADER__
 #define GfxTL__CELLRANGEDATATREESTRATEGY_HEADER__
+#include <memory>
+#include <vector>
 #include <vector>
 
 namespace GfxTL
@@ -142,15 +144,16 @@ namespace GfxTL
 				const unsigned int numSplitters, const CellType &parent,
 				const BuildInformationT &parentInfo, CellType **cells)
 			{
-				size_t *sizes = new size_t[size_t(1u) << numSplitters];
+				std::vector< size_t > sizes(size_t(1u) << numSplitters);
 				SplitData(splitters, numSplitters, parentInfo.Range(),
-					sizes);
+					sizes.data());
 				unsigned int childCount = 0;
 				HandleType begin = parent.m_range.first;
 				for(unsigned int i = 0; i < (1u << numSplitters); ++i)
 					if(sizes[i])
 					{
-						cells[i] = new CellType;
+						auto child = std::make_unique< CellType >();
+						cells[i] = child.release();
 						cells[i]->m_range.first = begin;
 						cells[i]->m_range.second = begin + sizes[i];
 						begin = cells[i]->m_range.second;
@@ -160,7 +163,6 @@ namespace GfxTL
 						cells[i] = NULL;
 				if(!cells[0] && childCount)
 					cells[0] = (CellType *)0x1;
-				delete [] sizes;
 			}
 
 			template< class SplitterT >

@@ -7,6 +7,7 @@
 #include <GfxTL/VectorKernel.h>
 #include <GfxTL/NullClass.h>
 #include <iostream>
+#include <memory>
 
 namespace GfxTL
 {
@@ -316,7 +317,8 @@ namespace GfxTL
 		{
 			typedef std::pair< CellType *, BuildInformation > Pair;
 			BaseType::Clear();
-			BaseType::Root() = new CellType;
+			auto root = std::make_unique< CellType >();
+			BaseType::Root() = root.get();
 			std::deque< Pair > stack(1);
 			// init build information directly on stack to avoid
 			// copying.
@@ -324,6 +326,7 @@ namespace GfxTL
 			InitRootBuildInformation(bcube, &stack.back().second);
 			this->InitRoot(stack.back().second, BaseType::Root());
 			BaseType::InitGlobalBuildInformation(*BaseType::Root(), stack.back().second);
+			root.release();
 			while(stack.size())
 			{
 				Pair &p = stack.back();
@@ -520,13 +523,15 @@ namespace GfxTL
 		{
 			typedef std::pair< CellType *, BuildInformation > Pair;
 			BaseType::Clear();
-			BaseType::Root() = new CellType();
+			auto root = std::make_unique< CellType >();
+			BaseType::Root() = root.get();
 			std::deque< Pair > stack(1);
 			// init build information directly on stack to avoid
 			// copying.
 			stack.back().first = BaseType::Root();
 			InitRootBuildInformation(bcube, &stack.back().second);
 			InitRoot(stack.back().second, BaseType::Root());
+			root.release();
 			while(stack.size())
 			{
 				Pair &p = stack.back();
@@ -552,7 +557,10 @@ namespace GfxTL
 					{
 						const size_t cmpB = 1 << (i - ((i >> 3) << 3));
 						if(b[i >> 3] & cmpB)
-							p.first->Children()[i] = new CellType();
+						{
+							auto child = std::make_unique< CellType >();
+							p.first->Children()[i] = child.release();
+						}
 						else
 							p.first->Children()[i] = (CellType *)1;
 					}
@@ -599,13 +607,15 @@ namespace GfxTL
 		{
 			typedef std::pair< CellType *, BuildInformation > Pair;
 			BaseType::Clear();
-			BaseType::Root() = new CellType();
+			auto root = std::make_unique< CellType >();
+			BaseType::Root() = root.get();
 			std::deque< Pair > queue(1);
 			// init build information directly on stack to avoid
 			// copying.
 			queue.back().first = BaseType::Root();
 			InitRootBuildInformation(bcube, &queue.back().second);
 			InitRoot(queue.back().second, BaseType::Root());
+			root.release();
 			while(queue.size())
 			{
 				Pair &p = queue.front();
@@ -630,7 +640,10 @@ namespace GfxTL
 					{
 						const size_t cmpB = 1 << (i - ((i >> 3) << 3));
 						if(b[i >> 3] & cmpB)
-							p.first->Children()[i] = new CellType();
+						{
+							auto child = std::make_unique< CellType >();
+							p.first->Children()[i] = child.release();
+						}
 						else
 							p.first->Children()[i] = (CellType *)1;
 					}
@@ -784,7 +797,8 @@ namespace GfxTL
 			for(unsigned int i = 0; i < (1 << DimT); ++i)
 				if(!this->ExistChild(*cell, i))
 				{
-					cell->Child(i, new CellType);
+					auto child = std::make_unique< CellType >();
+					cell->Child(i, child.release());
 					b[i >> 3] |= 1 << (i - ((i >> 3) << 3));
 				}
 				else

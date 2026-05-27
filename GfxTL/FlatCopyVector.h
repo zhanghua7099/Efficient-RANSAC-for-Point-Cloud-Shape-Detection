@@ -116,7 +116,7 @@ namespace GfxTL
 			void reserve(size_t s)
 			{
 				if(!s) return;
-				if((size_t)(m_capacity - m_begin) < s)
+				if(capacity() < s)
 				{
 					size_t olds = size();
 					T *newBegin = (T *)a_malloc(s * sizeof(T), 16); //new T[s];
@@ -133,11 +133,15 @@ namespace GfxTL
 
 			size_t size() const
 			{
+				if(!m_begin)
+					return 0;
 				return m_end - m_begin;
 			}
 
 			size_t capacity() const
 			{
+				if(!m_begin)
+					return 0;
 				return m_capacity - m_begin;
 			}
 
@@ -148,7 +152,7 @@ namespace GfxTL
 					clear();
 					return;
 				}
-				if((size_t)(m_capacity - m_begin) >= s)
+				if(capacity() >= s)
 				{
 					m_end = m_begin + s;
 					return;

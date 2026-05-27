@@ -44,7 +44,7 @@ namespace MiscLib
 			m_begin = AllocatorT::allocate(s);
 			m_end = m_begin + s;
 			m_capacity = m_end;
-			value_type v;
+			value_type v = value_type();
 			for(size_type i = 0; i < s; ++i)
 				AllocatorT::construct(m_begin + i, v);
 		}
@@ -164,7 +164,7 @@ namespace MiscLib
 		void reserve(size_type s)
 		{
 			if(!s) return;
-			if((size_type)(m_capacity - m_begin) < s)
+			if(capacity() < s)
 			{
 				size_type olds = size();
 				T *newBegin = AllocatorT::allocate(s);
@@ -185,11 +185,15 @@ namespace MiscLib
 
 		size_type size() const
 		{
+			if(!m_begin)
+				return 0;
 			return m_end - m_begin;
 		}
 
 		size_type capacity() const
 		{
+			if(!m_begin)
+				return 0;
 			return m_capacity - m_begin;
 		}
 
@@ -200,7 +204,7 @@ namespace MiscLib
 				clear();
 				return;
 			}
-			if((size_type)(m_capacity - m_begin) >= s)
+			if(capacity() >= s)
 			{
 				if(2 * s <= capacity())
 				{

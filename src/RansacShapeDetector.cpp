@@ -244,7 +244,7 @@ bool RansacShapeDetector::FindBestCandidate(CandidatesType &candidates,
 	}
 
 	MiscLib::Vector< Candidate * > candHeap;
-	for(size_t i = candidates.size() - 1; i != -1; --i)
+	for(size_t i = candidates.size(); i-- > 0;)
 	{
 		if(CandidateFailureProbability(
 			candidates[i].ExpectedValue(),
@@ -350,7 +350,7 @@ bool RansacShapeDetector::FindBestCandidate(CandidatesType &candidates,
 		candidates.back().ExpectedValue(),
 		currentSize - numInvalid, drawnCandidates, numLevels);
 
-	for(size_t i = bestCandidate - 1; i != -1; --i)
+	for(size_t i = bestCandidate; i-- > 0;)
 	{
 		float iFailProb = CandidateFailureProbability(candidates[i].ExpectedValue(),
 			currentSize - numInvalid, drawnCandidates, numLevels);
@@ -950,16 +950,23 @@ bool RansacShapeDetector::DrawSamplesStratified(const IndexedOctreeType &oct,
 	MiscLib::Vector< size_t > *samples,
 	const IndexedOctreeType::CellType **node) const
 {
+	if(oct.size() == 0)
+		return false;
+
 	for(size_t tries = 0; tries < m_maxCandTries; tries++)
 	{
 		samples->clear();
 		//get first point, which also determines octree cell
 		size_t first;
+		size_t firstTries = 0;
 		do
 		{
 			first = oct.Dereference(rn_rand() % oct.size());
+			++firstTries;
 		}
-		while(shapeIndex[first] != -1);
+		while(shapeIndex[first] != -1 && firstTries < 40);
+		if(shapeIndex[first] != -1)
+			continue;
 		samples->push_back(first);
 
 		std::pair< size_t, size_t > nodeRange;

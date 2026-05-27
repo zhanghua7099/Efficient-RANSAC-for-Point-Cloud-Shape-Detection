@@ -88,7 +88,11 @@ public:
 	const_pointer address(const_reference x) const { return &x; }
 	pointer allocate(size_type s, std::allocator< void >::const_pointer hint = 0)
 	{
-		pointer ptr = (T *)a_malloc(s * sizeof(T), Align);
+		(void)hint;
+		if(s > std::numeric_limits< size_type >::max() / sizeof(T))
+			throw std::bad_alloc();
+		const size_type bytes = s ? s * sizeof(T) : 1;
+		pointer ptr = (T *)a_malloc(bytes, Align);
 		if(!ptr)
 			throw std::bad_alloc();
 		return ptr;

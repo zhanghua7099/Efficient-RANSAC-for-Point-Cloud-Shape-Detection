@@ -10,10 +10,30 @@
 using namespace MiscLib;
 extern MiscLib::performance_t totalTime_components;
 
+namespace
+{
+bool PrepareBitmapOutput(const MiscLib::Vector< char > &bitmap,
+	size_t uextent, size_t vextent, MiscLib::Vector< char > *output)
+{
+	if(!output)
+		return false;
+
+	output->resize(bitmap.size(), 0);
+
+	return uextent >= 2
+		&& vextent >= 2
+		&& bitmap.size() % uextent == 0
+		&& bitmap.size() / uextent == vextent;
+}
+}
+
 void DilateSquare(const MiscLib::Vector< char > &bitmap,
 	size_t uextent, size_t vextent, bool uwrap, bool vwrap,
 	MiscLib::Vector< char > *dilated)
 {
+	if(!PrepareBitmapOutput(bitmap, uextent, vextent, dilated))
+		return;
+
 	// first pixel is special
 	(*dilated)[0] = bitmap[0] || bitmap[1] ||
 		bitmap[uextent] || bitmap[uextent + 1];
@@ -155,6 +175,9 @@ void DilateCross(const MiscLib::Vector< char > &bitmap,
 	size_t uextent, size_t vextent, bool uwrap, bool vwrap,
 	MiscLib::Vector< char > *dilated)
 {
+	if(!PrepareBitmapOutput(bitmap, uextent, vextent, dilated))
+		return;
+
 	// first pixel is special
 	(*dilated)[0] = bitmap[0] || bitmap[1] ||
 		bitmap[uextent];
@@ -263,6 +286,9 @@ void ErodeSquare(const MiscLib::Vector< char > &bitmap,
 	size_t uextent, size_t vextent, bool uwrap, bool vwrap,
 	MiscLib::Vector< char > *eroded)
 {
+	if(!PrepareBitmapOutput(bitmap, uextent, vextent, eroded))
+		return;
+
 	// first pixel is special
 	(*eroded)[0] = /*bitmap[0] && bitmap[1] &&
 		bitmap[uextent] && bitmap[uextent + 1]*/ false;
@@ -460,6 +486,9 @@ void ErodeCross(const MiscLib::Vector< char > &bitmap,
 	size_t uextent, size_t vextent, bool uwrap, bool vwrap,
 	MiscLib::Vector< char > *eroded)
 {
+	if(!PrepareBitmapOutput(bitmap, uextent, vextent, eroded))
+		return;
+
 	// first pixel is special
 	(*eroded)[0] = bitmap[0] && bitmap[1] &&
 		bitmap[uextent];
@@ -837,7 +866,7 @@ int Label(int n[], int size, int *curLabel,
 	MiscLib::Vector< std::pair< int, size_t > > *labels)
 {
 	// check if components are set
-	int count = 0, found;
+	int count = 0, found = 0;
 	for(int i = 0; i < size; ++i)
 	{
 		if(n[i])
@@ -959,10 +988,13 @@ void ComponentLoops(const MiscLib::Vector< int > &componentImg, size_t uextent,
 	size_t vextent, int label, bool uwrap, bool vwrap,
 	MiscLib::Vector< MiscLib::Vector< GfxTL::VectorXD< 2, size_t > > > *polys)
 {
+	if(uextent == 0 || vextent == 0 || componentImg.size() / uextent < vextent)
+		return;
+
 	typedef GfxTL::VectorXD< 2, size_t > Vec2;
 	// find first point of component
 	size_t firsti = 0;
-	int x, y, prevx, prevy;
+	int x = 0, y = 0, prevx, prevy;
 	// the corners of our pixels will be the vertices of our polygons
 	// (x, y) is the upper left corner of the pixel y * uextent + x
 	HashGrid< bool, 4 > edges;
@@ -971,6 +1003,7 @@ void ComponentLoops(const MiscLib::Vector< int > &componentImg, size_t uextent,
 	bool prevPixelWasWhite = true;
 	do
 	{
+		bool wrappedLastRowCandidate = false;
 		// find the first edge in the polygon
 		// edges are oriented so that the "black" pixels are on the right
 		// black pixels are pixels == label
@@ -1000,7 +1033,10 @@ void ComponentLoops(const MiscLib::Vector< int > &componentImg, size_t uextent,
 			{
 				x = 0;
 				y = vextent - 1;
+				wrappedLastRowCandidate = true;
 			}
+			else
+				break;
 		}
 		MiscLib::Vector< Vec2 > poly;
 		// we initialize the path with an oriented edge
@@ -1013,7 +1049,11 @@ void ComponentLoops(const MiscLib::Vector< int > &componentImg, size_t uextent,
 			// check if edge was visited already
 			int edgeIndex[] = { x, y, 1, 2 };
 			if(edges.find(edgeIndex))
+			{
+				if(wrappedLastRowCandidate)
+					break;
 				continue;
+			}
 			prevx = 0;
 			prevy = 1;
 		}
@@ -1022,11 +1062,19 @@ void ComponentLoops(const MiscLib::Vector< int > &componentImg, size_t uextent,
 			size_t dx, dy;
 			if(!IsEdge(componentImg, uextent, vextent, label, uwrap, vwrap,
 				x, y, 1, 0, &dx, &dy))
+			{
+				if(wrappedLastRowCandidate)
+					break;
 				continue;
+			}
 			// check if edge was visited already
 			int edgeIndex[] = { x + 1, y, 0, 1 };
 			if(edges.find(edgeIndex))
+			{
+				if(wrappedLastRowCandidate)
+					break;
 				continue;
+			}
 			// on top of pixel
 			prevx = -1;
 			prevy = 0;
@@ -1037,12 +1085,20 @@ void ComponentLoops(const MiscLib::Vector< int > &componentImg, size_t uextent,
 			size_t dx, dy;
 			if(!IsEdge(componentImg, uextent, vextent, label, uwrap, vwrap,
 				x + 1, y + 1, -1, 0, &dx, &dy))
+			{
+				if(wrappedLastRowCandidate)
+					break;
 				continue;
+			}
 			// on bottom of pixel
 			// check if edge was visited already
 			int edgeIndex[] = { x + 1, y + 1, 0, 1 };
 			if(edges.find(edgeIndex))
+			{
+				if(wrappedLastRowCandidate)
+					break;
 				continue;
+			}
 			prevx = -1;
 			prevy = 0;
 			++y;
@@ -1053,18 +1109,30 @@ void ComponentLoops(const MiscLib::Vector< int > &componentImg, size_t uextent,
 			size_t dx, dy;
 			if(!IsEdge(componentImg, uextent, vextent, label, uwrap, vwrap,
 				x + 1, y + 1, 0, -1, &dx, &dy))
+			{
+				if(wrappedLastRowCandidate)
+					break;
 				continue;
+			}
 			// on bottom of pixel
 			// check if edge was visited already
 			int edgeIndex[] = { x + 1, y + 1, 1, 0 };
 			if(edges.find(edgeIndex))
+			{
+				if(wrappedLastRowCandidate)
+					break;
 				continue;
+			}
 			prevx = 0;
 			prevy = 1;
 			++y;
 		}
 		else
+		{
+			if(wrappedLastRowCandidate)
+				break;
 			continue; // we are unable to start a loop at this position
+		}
 		poly.push_back(Vec2(x + prevx, y + prevy));
 		edges[x][y][prevx + 1][prevy + 1] = true;
 		do
@@ -1083,7 +1151,7 @@ void ComponentLoops(const MiscLib::Vector< int > &componentImg, size_t uextent,
 					x, y, prevx, prevy, &nextx, &nexty))
 					break;
 			}
-			if(checkEdge > 3)
+			if(checkEdge >= 3)
 				return;
 			x = nextx;
 			y = nexty;

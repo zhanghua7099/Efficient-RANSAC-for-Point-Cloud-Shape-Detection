@@ -36,10 +36,28 @@ struct DLL_LINKAGE Point {
 #endif
 
 	//unsigned int meshFaceIndex;
-	Point() {}
-	Point(const Vec3f &Pos) {/*index = -1;*/ pos = Pos; normal = Vec3f(0,0,0); }
-	Point(const Vec3f &Pos, const Vec3f &Normal) { pos = Pos; normal = Normal; }
-	const float operator[](unsigned int i) const
+	Point()
+	: pos(0, 0, 0)
+	, normal(0, 0, 0)
+#ifdef POINT_HAS_INDEX
+	, index(0)
+#endif
+	{}
+	Point(const Vec3f &Pos)
+	: pos(Pos)
+	, normal(0, 0, 0)
+#ifdef POINT_HAS_INDEX
+	, index(0)
+#endif
+	{}
+	Point(const Vec3f &Pos, const Vec3f &Normal)
+	: pos(Pos)
+	, normal(Normal)
+#ifdef POINT_HAS_INDEX
+	, index(0)
+#endif
+	{}
+	float operator[](unsigned int i) const
 	{
 		return pos[i];
 	}
@@ -70,7 +88,7 @@ class DLL_LINKAGE PointCloud
 {
 public:
 	PointCloud();
-	PointCloud(Point *points, unsigned int size);
+	PointCloud(const Point *points, unsigned int size);
 	PointCloud &operator+=(const PointCloud &other)
 	{
 		size_t oldSize = size();
@@ -112,6 +130,9 @@ public:
 	void Translate(const Vec3f &trans);
 
 private:
+	void ResetBBox();
+	void UpdateBBoxFromPoints();
+
    Vec3f m_min, m_max;
 };
 

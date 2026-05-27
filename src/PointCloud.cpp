@@ -121,28 +121,43 @@ float quick_select(float arr[], int n)
 
 PointCloud::PointCloud()
 {
-	float fmax = numeric_limits<float>::max();
-	float fmin = -fmax;
-	m_min = Vec3f(fmax, fmax, fmax);
-	m_max = Vec3f(fmin, fmin, fmin);
+	ResetBBox();
 }
 
-PointCloud::PointCloud(Point *points, unsigned int s)
+PointCloud::PointCloud(const Point *points, unsigned int s)
 {
-	float fmax = numeric_limits<float>::max();
-	float fmin = -fmax;
-	m_min = Vec3f(fmax, fmax, fmax);
-	m_max = Vec3f(fmin, fmin, fmin);
+	ResetBBox();
 	std::copy(points, points + s, std::back_inserter(*this));
+	UpdateBBoxFromPoints();
 }
 
 void PointCloud::reset(size_t s)
 {
 	resize(s);
+	UpdateBBoxFromPoints();
+}
+
+void PointCloud::ResetBBox()
+{
 	float fmax = numeric_limits<float>::max();
 	float fmin = -fmax;
 	m_min = Vec3f(fmax, fmax, fmax);
 	m_max = Vec3f(fmin, fmin, fmin);
+}
+
+void PointCloud::UpdateBBoxFromPoints()
+{
+	ResetBBox();
+	for(size_t i = 0; i < size(); ++i)
+	{
+		const Vec3f &p = at(i).pos;
+		m_min = Vec3f(std::min(m_min[0], p[0]),
+			std::min(m_min[1], p[1]),
+			std::min(m_min[2], p[2]));
+		m_max = Vec3f(std::max(m_max[0], p[0]),
+			std::max(m_max[1], p[1]),
+			std::max(m_max[2], p[2]));
+	}
 }
 
 std::array< float, 6 > PointCloud::getBboxArray() const
@@ -183,6 +198,8 @@ void PointCloud::Translate(const Vec3f &trans)
 void PointCloud::calcNormals ( float radius, unsigned int kNN, unsigned int maxTries )
 {
 //	cerr << "Begin calcNormals " << endl << flush;
+	if(size() == 0 || kNN == 0)
+		return;
 
 	KdTree3Df kd;
 	kd.IndexedData(begin(), end());

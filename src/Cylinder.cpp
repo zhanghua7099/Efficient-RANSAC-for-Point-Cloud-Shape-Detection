@@ -258,6 +258,11 @@ void Cylinder::Project(const Vec3f &p, Vec3f *pp) const
 	float lambda = m_axisDir.dot(diff);
 	*pp = (diff - lambda * m_axisDir);
 	float l = pp->length();
+	if(l < 1e-10f)
+	{
+		*pp = p;
+		return;
+	}
 	*pp *= (l - m_radius) / l;
 	*pp += p;
 }
@@ -356,9 +361,9 @@ void CylinderDistanceDerivatives(const float *param, const float *x,
 	f = std::sqrt(f);
 	if(f < 1.0e-6)
 	{
-		gradient[0] = std::sqrt(1 - param[3] * param[3]);
-		gradient[1] = std::sqrt(1 - param[4] * param[4]);
-		gradient[2] = std::sqrt(1 - param[5] * param[5]);
+		gradient[0] = std::sqrt(std::max(0.f, 1.f - param[3] * param[3]));
+		gradient[1] = std::sqrt(std::max(0.f, 1.f - param[4] * param[4]));
+		gradient[2] = std::sqrt(std::max(0.f, 1.f - param[5] * param[5]));
 	}
 	else
 	{

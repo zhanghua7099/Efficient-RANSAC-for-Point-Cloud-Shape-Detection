@@ -43,15 +43,17 @@ static bool CircleFrom3Points(InIteratorT i, float *r,
 
 	bot = (a + b + c) * (-a + b + c) * (a - b + c) * (a + b - c);
 
-	if(bot <= 0.f)
+	if(bot <= 1e-10f)
 		return false;
 
 	*r = a * b * c / std::sqrt(bot);
 	//  center.
 	top1 = (i[1][1] - i[0][1]) * c * c - (i[2][1] - i[0][1]) * a * a;
 	top2 = (i[1][0] - i[0][0]) * c * c - (i[2][0] - i[0][0]) * a * a;
-	bot = (i[1][1] - i[0][1]) * (i[2][0] - i[0][0])  
+	bot = (i[1][1] - i[0][1]) * (i[2][0] - i[0][0])
 		- (i[2][1] - i[0][1]) * (i[1][0] - i[0][0]);
+	if(std::abs(bot) < 1e-10f)
+		return false;
 
 	(*center)[0] = i[0][0] + 0.5f * top1 / bot;
 	(*center)[1] = i[0][1] - 0.5f * top2 / bot;
@@ -94,10 +96,16 @@ bool Torus::Init(const MiscLib::Vector< Vec3f > &samples)
 		% dsamples[k + 1]) * dsamples[k + 3];
 	double b = ((dsamples[0] - dsamples[3])
 		% (dsamples[1] - dsamples[0])) * dsamples[k + 3];
+	if(std::abs(a01) < 1e-10)
+		return false;
 	double cc = b01 / a01;
 	double ccc = b0 - a0 * cc;
+	if(std::abs(ccc) < 1e-10)
+		return false;
 	double c = -(b1 - a1 * cc) / ccc;
 	double d = (-b + a * cc) / ccc;
+	if(std::abs(c) < 1e-10)
+		return false;
 	double p = (a0 * c + a1 + a01 * d) / (2 * a01 * c);
 	double q = (a + a0 * d) / (a01 * c);
 	double rt = p * p - q;
@@ -112,9 +120,13 @@ bool Torus::Init(const MiscLib::Vector< Vec3f > &samples)
 
 	Vec3f pos1 = samples[0] + s1 * samples[k];
 	Vec3f normal1 = pos1 - (samples[1] + t1 * samples[k + 1]);
+	if(normal1.sqrLength() < 1e-10f)
+		return false;
 	normal1.normalize();
 	Vec3f pos2 = samples[0] + s2 * samples[k];
 	Vec3f normal2 = pos2 - (samples[1] + t2 * samples[k + 1]);
+	if(normal2.sqrLength() < 1e-10f)
+		return false;
 	normal2.normalize();
 
 	// at this point there are two possible solutions for the axis
@@ -394,6 +406,8 @@ void TorusDistanceDerivatives(const float *param, const float *x,
 	v = param[4] * s[0] - param[3] * s[1];
 	f += v * v;
 	f = std::sqrt(f);
+	if(f < 1e-10f)
+		return;
 	float dg[6];
 	dg[0] = -param[3];
 	dg[1] = -param[4];
@@ -412,6 +426,8 @@ void TorusDistanceDerivatives(const float *param, const float *x,
     float d = std::sqrt(g * g + (tmp * tmp)) - param[7];
 	float dr = d + param[7];
 	float fr = f - param[6];
+	if(std::abs(dr) < 1e-10f)
+		return;
 	for(unsigned int i = 0; i < 6; ++i)
 		gradient[i] = (g * dg[i] + fr * df[i]) / dr;
 	gradient[6] = -fr * dr;
@@ -489,6 +505,8 @@ public:
 			dg[3] = s[0] - params[3] * g;
 			dg[4] = s[1] - params[4] * g;
 			dg[5] = s[2] - params[5] * g;
+			if(temp[idx] < 1e-10f)
+				continue;
 			ScalarType df[6];
 			df[0] = (params[3] * g - s[0]) / temp[idx];
 			df[1] = (params[4] * g - s[1]) / temp[idx];
@@ -499,6 +517,8 @@ public:
             ScalarType tmp = (temp[idx] - params[6]);
             ScalarType d = std::sqrt(g * g + (tmp * tmp)) - params[7];
 			ScalarType dr = d + params[7];
+			if(std::abs(dr) < 1e-10f)
+				continue;
 			ScalarType fr = temp[idx] - params[6];
 			for(unsigned int j = 0; j < 6; ++j)
 				matrix[idx * NumParams + j] = (g * dg[j] + fr * df[j]) / dr;

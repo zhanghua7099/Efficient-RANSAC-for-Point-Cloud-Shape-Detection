@@ -402,7 +402,13 @@ void Cone::Project(const Vec3f &p, Vec3f *pp) const
 	float dist = -(da + db);
 	// need normal
 	Vec3f plx = s - g * m_axisDir;
-	plx.normalize();
+	float plxLen = plx.length();
+	if(plxLen < 1e-10f)
+	{
+		*pp = m_center;
+		return;
+	}
+	plx *= 1.f / plxLen;
 	Vec3f n = m_normal[0] * plx + m_normalY;
 	*pp = p + dist * n;
 }
@@ -541,9 +547,9 @@ void ConeDistanceDerivatives(const float *param, const float *x,
 	float fgradient[6];
 	if(f < 1.0e-6)
 	{
-		fgradient[0] = std::sqrt(1 - param[3] * param[3]);
-		fgradient[1] = std::sqrt(1 - param[4] * param[4]);
-		fgradient[2] = std::sqrt(1 - param[5] * param[5]);
+		fgradient[0] = std::sqrt(std::max(0.f, 1.f - param[3] * param[3]));
+		fgradient[1] = std::sqrt(std::max(0.f, 1.f - param[4] * param[4]));
+		fgradient[2] = std::sqrt(std::max(0.f, 1.f - param[5] * param[5]));
 	}
 	else
 	{

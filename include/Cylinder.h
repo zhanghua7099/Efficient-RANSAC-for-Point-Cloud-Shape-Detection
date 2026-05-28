@@ -107,8 +107,8 @@ private:
 				v = params[4] * s[0] - params[3] * s[1];
 				u += v * v;
 				temp[idx] = std::sqrt(u);
-				chi += (values[idx] = WeightT::Weigh(temp[idx] - params[6]))
-					* values[idx];
+				values[idx] = WeightT::Weigh(temp[idx] - params[6]);
+				chi += values[idx] * values[idx];
 			}
 			return chi;
 		}

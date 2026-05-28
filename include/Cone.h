@@ -117,8 +117,8 @@ private:
 				else
 					f = std::sqrt(f);
 				temp[idx] = f;
-				chi += (values[idx] = WeightT::Weigh(cosPhi * f - sinPhi * g))
-					* values[idx];
+				values[idx] = WeightT::Weigh(cosPhi * f - sinPhi * g);
+				chi += values[idx] * values[idx];
 			}
 			return chi;
 		}

@@ -1,5 +1,6 @@
 #include "Plane.h"
 //#include "pca.h"
+#include <limits>
 #include <MiscLib/Performance.h>
 #include "LevMarFitting.h"
 #include <GfxTL/VectorXD.h>
@@ -10,7 +11,8 @@
 Plane::Plane(Vec3f p1, Vec3f p2, Vec3f p3)
 {
    m_normal= (p2-p1).cross(p3-p2);
-   m_normal.normalize();		
+   if(m_normal.sqrLength() >= 1e-12f)
+       m_normal.normalize();
    m_pos = p1;
    m_dist = m_pos.dot(m_normal);
 }
@@ -265,5 +267,8 @@ void Plane::Transform(float scale, const Vec3f &translate)
 
 float Plane::Intersect(const Vec3f &p, const Vec3f &r) const
 {
-	return -SignedDistance(p) / (m_normal.dot(r));
+	float denom = m_normal.dot(r);
+	if(std::abs(denom) < 1e-10f)
+		return std::numeric_limits< float >::infinity();
+	return -SignedDistance(p) / denom;
 }

@@ -520,7 +520,7 @@ void ConePrimitiveShape::WrapComponents(
 	labels->reserve(condensed.size());
 	int count = 0;
     for(size_t i = 0; i < tempLabels.size(); ++i)
-		if(i == tempLabels[i].first)
+		if(i == static_cast<size_t>(tempLabels[i].first))
 		{
 			labels->push_back(std::make_pair(count, tempLabels[i].second));
 			condensed[i] = count;

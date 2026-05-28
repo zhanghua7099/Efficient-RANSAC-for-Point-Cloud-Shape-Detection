@@ -257,6 +257,8 @@ bool Sphere::Init2(const Vec3f &p1, const Vec3f &p2, const Vec3f &n1,
 	float da = (p1 - m_center).length();
 	float db = (p2 - m_center).length();
 	m_radius = 0.5f * (da + db);
+	if(m_radius < 1e-10f)
+		return false;
 	// do some plausability checks
 	// lets say the actual distance should not deviate by more than 10%
 	float dev = da / m_radius;
@@ -313,6 +315,11 @@ void Sphere::Project(const Vec3f &p, Vec3f *pp) const
 {
 	*pp = p - m_center;
 	float l = pp->length();
+	if(l < 1e-10f)
+	{
+		*pp = m_center;
+		return;
+	}
 	*pp *= m_radius / l;
 	*pp += m_center;
 }
@@ -528,7 +535,7 @@ void SphereAsSquaresParametrization::HyperplaneCoordinateSystem( Vec3f* hcs0, Ve
 void SphereAsSquaresParametrization::Hemisphere2Disk(const Vec3f &p,
 	std::pair< float, float > *inDisk) const
 {
-    inDisk->first = std::sqrt(1 - p[2]); 
+    inDisk->first = std::sqrt(std::max(0.f, 1.f - p[2]));
     inDisk->second = std::atan2(p[1], p[0]); 
 }
 

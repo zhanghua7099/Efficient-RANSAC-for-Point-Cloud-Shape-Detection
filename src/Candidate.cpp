@@ -135,13 +135,13 @@ float Candidate::GetVariance( const PointCloud &pc )
 	{
 		// first pass - get expectancy
 		float expectancy = 0.0f;
-		for( int i = 0; i < m_indices->size(); ++i )
+		for( size_t i = 0; i < m_indices->size(); ++i )
 			expectancy += fabs( m_shape->NormalDeviation( pc[(*m_indices)[i]].pos, pc[(*m_indices)[i]].normal));
 
 		expectancy /= static_cast<float>( m_indices->size());
 
 		// second pass - get real variance
-		for( int i = 0; i < m_indices->size(); ++i )
+		for( size_t i = 0; i < m_indices->size(); ++i )
 		{
 			dev = fabs( m_shape->NormalDeviation( pc[(*m_indices)[i]].pos, pc[(*m_indices)[i]].normal)) - expectancy;
 			variance += dev * dev;
@@ -160,7 +160,9 @@ float Candidate::GetPseudoVariance( const PointCloud &pc )
 	float variance = 0.0f;
 	float dev;
 
-	for( int i = 0; i < m_indices->size(); ++i )
+	if(m_indices->size() == 0)
+		return 0.0f;
+	for( size_t i = 0; i < m_indices->size(); ++i )
 	{
 		dev = fabs( m_shape->NormalDeviation( pc[(*m_indices)[i]].pos, pc[(*m_indices)[i]].normal)) - 1.0f;
 		variance += dev * dev;
